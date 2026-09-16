@@ -1,67 +1,65 @@
-# Purple Dragon Attendance PWA — Phase 2
+# Purple Dragon Attendance PWA — Phase 3
 
-This version adds real Google Sheet synchronization.
+This build adds the production-facing student experience on top of the proven
+Phase 2 offline sync architecture.
 
-## What Phase 2 does
+## New in Phase 3
 
-- downloads the active student roster from Google Apps Script
-- stores the roster in IndexedDB for offline use
-- records confirmed attendance locally first
-- gives every attendance record a unique Attendance ID
-- queues sign-ins when offline
-- uploads queued sign-ins when online
-- server-side duplicate protection
-- displays:
-  - Online / Offline
-  - students stored
-  - pending sign-ins
-  - roster last updated
-  - attendance last synced
-- automatically syncs:
-  - when the app opens online
-  - when connectivity returns
-  - after a sign-in while online
-- includes a manual **Sync Now** button
+- Purple Dragon crest on the student screens
+- **Forgot Your Number?** button and offline local-roster search
+- search result → normal name confirmation → attendance
+- **Trial Class Sign-In**
+- trial sign-ins are stored locally first and sync later
+- reliable reconnect sync:
+  - immediately on online event
+  - retry after 3, 10 and 30 seconds
+  - retry when app returns to foreground
+  - retry on focus
+  - one-minute safety check while open
+- Clear Attendance test control removed from the UI
+- Device / Sync Status retained
+- separate pending counts for attendance and trials
 
-## Members sheet
+## Important: keep your existing config.js
 
-Expected columns:
+This ZIP deliberately contains **config.example.js**, not `config.js`.
 
-- A = PIN / student number
-- B = Name
-- C = Historical / initial attendance count
-- D = Active
+Your GitHub repository already has a working `config.js` containing your Apps
+Script `/exec` URL. Leave that file alone when uploading Phase 3.
 
-Only active students are downloaded to the PWA roster.
+## Google Sheet changes
 
-## Log sheet
+### Log
+- A Timestamp
+- B Name
+- C PIN
+- D Attendance ID
 
-Phase 2 uses:
+### Trials
+- A Timestamp
+- B Full Name
+- C Email
+- D Notes
+- E Trial ID
 
-- A = Timestamp
-- B = Name
-- C = PIN
-- D = Attendance ID
+Existing rows remain valid.
 
-Old rows may have column D blank. That is fine.
+## Deploy
 
-## Setup
+1. Replace your Apps Script Code.gs with the supplied Phase 3 Code.gs.
+2. Save and update the existing Apps Script web-app deployment.
+3. Upload the Phase 3 PWA files to GitHub.
+4. Do **not** delete or replace the existing `config.js`.
+5. Commit.
+6. Wait for GitHub Pages to deploy.
+7. Open the PWA online, close it, then reopen once so service-worker v5 controls it.
+8. Open Device / Sync Status and press Sync Now once.
+9. Test:
+   - regular student sign-in
+   - Forgot Your Number?
+   - Trial Class Sign-In
+   - offline sign-in, then reconnect and watch it sync automatically.
 
-1. Replace your Apps Script `Code.gs` with the Phase 2 version supplied separately.
-2. Save the Apps Script project.
-3. Update the existing web-app deployment to the new version.
-4. Copy the web-app `/exec` URL.
-5. Open `config.js` and replace:
-
-   `PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE`
-
-   with that `/exec` URL.
-6. Upload the PWA files to the root of the GitHub repository.
-7. Commit the changes.
-8. Wait for GitHub Pages to redeploy.
-9. Open the PWA while online.
-10. Open **Device / Sync Status** and press **Sync Now**.
-11. Confirm that the real student count appears.
-12. Test one online sign-in, then one offline sign-in.
-
-Do not clear local attendance while pending sign-ins exist.
+The crest is loaded from the same Purple Dragon URL used in the production
+Apps Script app and is cached by the service worker after the first successful
+online load, so it remains available offline afterward.

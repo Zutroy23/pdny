@@ -1,9 +1,10 @@
 const PDDB = (() => {
   const DB_NAME = 'purpleDragonAttendance';
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
 
   const STUDENTS = 'students';
   const ATTENDANCE = 'attendance';
+  const TRIALS = 'trials';
   const META = 'meta';
 
   function open() {
@@ -25,6 +26,11 @@ const PDDB = (() => {
           attendance.createIndex('pinDate', 'pinDate', { unique: false });
         }
 
+        if (!db.objectStoreNames.contains(TRIALS)) {
+          const trials = db.createObjectStore(TRIALS, { keyPath: 'id' });
+          trials.createIndex('syncStatus', 'syncStatus', { unique: false });
+        }
+
         if (!db.objectStoreNames.contains(META)) {
           db.createObjectStore(META, { keyPath: 'key' });
         }
@@ -35,23 +41,21 @@ const PDDB = (() => {
     });
   }
 
-  async function withStore(storeName, mode, work) {
+  async function transaction(storeName, mode, work) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, mode);
       const store = tx.objectStore(storeName);
-
-      let result;
+      let value;
 
       try {
-        result = work(store);
+        value = work(store);
       } catch (err) {
         reject(err);
         return;
       }
 
-      tx.oncomplete = () => resolve(result);
+      tx.oncomplete = () => resolve(value);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
@@ -59,11 +63,9 @@ const PDDB = (() => {
 
   async function replaceStudents(students) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STUDENTS, 'readwrite');
       const store = tx.objectStore(STUDENTS);
-
       store.clear();
 
       students.forEach(student => {
@@ -82,39 +84,64 @@ const PDDB = (() => {
     });
   }
 
-  // Kept for test/backward compatibility.
-  async function putStudents(students) {
-    return withStore(STUDENTS, 'readwrite', store => {
-      students.forEach(student => {
-        store.put({
-          pin: String(student.pin),
-          name: String(student.name),
-          nameLower: String(student.name).toLowerCase(),
-          active: student.active !== false,
-          updatedAt: Date.now()
-        });
-      });
-    });
-  }
-
   async function getStudent(pin) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STUDENTS, 'readonly');
-      const req = tx.objectStore(STUDENTS).get(String(pin));
+      const req = db.transaction(STUDENTS, 'readonly')
+        .objectStore(STUDENTS)
+        .get(String(pin));
 
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => reject(req.error);
     });
   }
 
+  async function searchStudents(term, limit = 20) {
+    term = String(term || '').trim().toLowerCase();
+    if (!term) return [];
+
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const store = db.transaction(STUDENTS, 'readonly').objectStore(STUDENTS);
+      const req = store.openCursor();
+      const rows = [];
+
+      req.onsuccess = () => {
+        const cursor = req.result;
+
+        if (!cursor || rows.length >= limit) {
+          rows.sort((a, b) => a.name.localeCompare(b.name));
+          resolve(rows);
+          return;
+        }
+
+        const student = cursor.value;
+        const name = String(student.name || '');
+        const pin = String(student.pin || '');
+
+        if (
+          student.active !== false &&
+          (
+            name.toLowerCase().includes(term) ||
+            pin.includes(term)
+          )
+        ) {
+          rows.push(student);
+        }
+
+        cursor.continue();
+      };
+
+      req.onerror = () => reject(req.error);
+    });
+  }
+
   async function count(storeName) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readonly');
-      const req = tx.objectStore(storeName).count();
+      const req = db.transaction(storeName, 'readonly')
+        .objectStore(storeName)
+        .count();
 
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -133,25 +160,28 @@ const PDDB = (() => {
     const key = `${String(pin)}|${localDateKey()}`;
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(ATTENDANCE, 'readonly');
-      const index = tx.objectStore(ATTENDANCE).index('pinDate');
-      const req = index.get(key);
+      const req = db.transaction(ATTENDANCE, 'readonly')
+        .objectStore(ATTENDANCE)
+        .index('pinDate')
+        .get(key);
 
       req.onsuccess = () => resolve(Boolean(req.result));
       req.onerror = () => reject(req.error);
     });
   }
 
+  function uuid() {
+    return crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
   async function addAttendance(student) {
     const now = new Date();
     const dateKey = localDateKey(now);
 
-    const id = crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
     const row = {
-      id,
+      id: uuid(),
       pin: String(student.pin),
       name: String(student.name),
       timestamp: now.toISOString(),
@@ -162,36 +192,34 @@ const PDDB = (() => {
       createdOnDeviceAt: Date.now()
     };
 
-    await withStore(
-      ATTENDANCE,
-      'readwrite',
-      store => store.add(row)
-    );
-
+    await transaction(ATTENDANCE, 'readwrite', store => store.add(row));
     return row;
   }
 
-  async function pendingCount() {
-    const db = await open();
+  async function addTrial(fullName, email, notes) {
+    const row = {
+      id: uuid(),
+      timestamp: new Date().toISOString(),
+      fullName: String(fullName || '').trim(),
+      email: String(email || '').trim(),
+      notes: String(notes || '').trim(),
+      syncStatus: 'pending',
+      syncMessage: '',
+      createdOnDeviceAt: Date.now()
+    };
 
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(ATTENDANCE, 'readonly');
-      const index = tx.objectStore(ATTENDANCE).index('syncStatus');
-      const req = index.count('pending');
-
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    await transaction(TRIALS, 'readwrite', store => store.add(row));
+    return row;
   }
 
-  async function getPendingAttendance(limit = 250) {
+  async function pendingRows(storeName, limit = 250) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(ATTENDANCE, 'readonly');
-      const index = tx.objectStore(ATTENDANCE).index('syncStatus');
-      const range = IDBKeyRange.only('pending');
-      const req = index.openCursor(range);
+      const index = db.transaction(storeName, 'readonly')
+        .objectStore(storeName)
+        .index('syncStatus');
+
+      const req = index.openCursor(IDBKeyRange.only('pending'));
       const rows = [];
 
       req.onsuccess = () => {
@@ -210,32 +238,36 @@ const PDDB = (() => {
     });
   }
 
-  async function applySyncResults(results) {
-    if (!Array.isArray(results) || !results.length) {
-      return;
-    }
+  async function statusCount(storeName, status) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(storeName, 'readonly')
+        .objectStore(storeName)
+        .index('syncStatus')
+        .count(status);
+
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function applyResults(storeName, results) {
+    if (!Array.isArray(results) || !results.length) return;
 
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(ATTENDANCE, 'readwrite');
-      const store = tx.objectStore(ATTENDANCE);
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
 
       results.forEach(result => {
-        if (!result || !result.id) {
-          return;
-        }
+        if (!result || !result.id) return;
 
         const req = store.get(String(result.id));
-
         req.onsuccess = () => {
           const row = req.result;
           if (!row) return;
 
-          if (
-            result.status === 'synced' ||
-            result.status === 'duplicate'
-          ) {
+          if (result.status === 'synced' || result.status === 'duplicate') {
             row.syncStatus = 'synced';
           } else if (result.status === 'rejected') {
             row.syncStatus = 'rejected';
@@ -257,11 +289,11 @@ const PDDB = (() => {
 
   async function recentAttendance(limit = 20) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(ATTENDANCE, 'readonly');
-      const store = tx.objectStore(ATTENDANCE);
-      const req = store.openCursor(null, 'prev');
+      const req = db.transaction(ATTENDANCE, 'readonly')
+        .objectStore(ATTENDANCE)
+        .openCursor(null, 'prev');
+
       const rows = [];
 
       req.onsuccess = () => {
@@ -280,52 +312,41 @@ const PDDB = (() => {
     });
   }
 
-  async function clearAttendance() {
-    return withStore(
-      ATTENDANCE,
-      'readwrite',
-      store => store.clear()
-    );
-  }
-
   async function setMeta(key, value) {
-    return withStore(META, 'readwrite', store => {
-      store.put({
-        key: String(key),
-        value,
-        updatedAt: Date.now()
-      });
+    return transaction(META, 'readwrite', store => {
+      store.put({ key: String(key), value, updatedAt: Date.now() });
     });
   }
 
   async function getMeta(key) {
     const db = await open();
-
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(META, 'readonly');
-      const req = tx.objectStore(META).get(String(key));
+      const req = db.transaction(META, 'readonly')
+        .objectStore(META)
+        .get(String(key));
 
-      req.onsuccess = () => {
-        resolve(req.result ? req.result.value : null);
-      };
-
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
       req.onerror = () => reject(req.error);
     });
   }
 
   return {
     replaceStudents,
-    putStudents,
     getStudent,
+    searchStudents,
     countStudents: () => count(STUDENTS),
     countAttendance: () => count(ATTENDANCE),
+    countTrials: () => count(TRIALS),
     hasAttendanceToday,
     addAttendance,
-    pendingCount,
-    getPendingAttendance,
-    applySyncResults,
+    addTrial,
+    getPendingAttendance: limit => pendingRows(ATTENDANCE, limit),
+    getPendingTrials: limit => pendingRows(TRIALS, limit),
+    pendingAttendanceCount: () => statusCount(ATTENDANCE, 'pending'),
+    pendingTrialCount: () => statusCount(TRIALS, 'pending'),
+    applyAttendanceResults: results => applyResults(ATTENDANCE, results),
+    applyTrialResults: results => applyResults(TRIALS, results),
     recentAttendance,
-    clearAttendance,
     setMeta,
     getMeta
   };

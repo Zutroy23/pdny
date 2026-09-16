@@ -3,26 +3,30 @@
   let selectedStudent = null;
   let resetTimer = null;
   let syncInProgress = false;
+  const reconnectTimers = [];
 
   const $ = id => document.getElementById(id);
 
   function apiConfigured() {
-    return (
+    return Boolean(
       window.PD_CONFIG &&
       window.PD_CONFIG.API_URL &&
-      !window.PD_CONFIG.API_URL.includes('PASTE_YOUR_APPS_SCRIPT')
+      !String(window.PD_CONFIG.API_URL).includes('PASTE_YOUR_APPS_SCRIPT')
     );
   }
 
   function apiUrl() {
-    return String(window.PD_CONFIG.API_URL || '').trim();
+    return String(
+      window.PD_CONFIG && window.PD_CONFIG.API_URL
+        ? window.PD_CONFIG.API_URL
+        : ''
+    ).trim();
   }
 
   function showScreen(id) {
-    document
-      .querySelectorAll('.screen')
-      .forEach(el => el.classList.remove('active'));
-
+    document.querySelectorAll('.screen').forEach(el => {
+      el.classList.remove('active');
+    });
     $(id).classList.add('active');
   }
 
@@ -41,6 +45,13 @@
       $('pinMessage').textContent = '';
       showScreen('pinScreen');
     }, delay);
+  }
+
+  function prepareStudentConfirmation(student) {
+    selectedStudent = student;
+    $('confirmName').textContent = student.name;
+    $('confirmPin').textContent = `Number ${student.pin}`;
+    showScreen('confirmScreen');
   }
 
   async function processPin() {
@@ -62,11 +73,8 @@
         return;
       }
 
-      selectedStudent = student;
-      $('confirmName').textContent = student.name;
-      $('confirmPin').textContent = `Number ${student.pin}`;
       $('pinMessage').textContent = '';
-      showScreen('confirmScreen');
+      prepareStudentConfirmation(student);
 
     } catch (err) {
       console.error(err);
@@ -83,20 +91,121 @@
       const duplicate =
         await PDDB.hasAttendanceToday(selectedStudent.pin);
 
-      if (duplicate) {
-        $('successName').textContent = selectedStudent.name;
-        $('syncHint').textContent =
-          'Already signed in on this device today.';
+      $('successTitle').textContent = duplicate
+        ? 'Already Signed In'
+        : 'Signed In';
 
-        showScreen('successScreen');
-        await refreshStatus();
-        resetToPin(1800);
+      $('successName').textContent = selectedStudent.name;
+
+      if (duplicate) {
+        $('syncHint').textContent =
+          'This student already signed in on this device today.';
+      } else {
+        await PDDB.addAttendance(selectedStudent);
+
+        $('syncHint').textContent = navigator.onLine
+          ? 'Saved locally. Syncing…'
+          : 'Offline — safely queued on this device.';
+      }
+
+      showScreen('successScreen');
+      await refreshStatus();
+
+      if (!duplicate && navigator.onLine) {
+        syncNow({ quiet: true }).catch(console.error);
+      }
+
+      resetToPin(1800);
+
+    } catch (err) {
+      console.error(err);
+      $('successTitle').textContent = 'Sign-In Problem';
+      $('successName').textContent = selectedStudent.name;
+      $('syncHint').textContent = 'Could not save locally.';
+      showScreen('successScreen');
+      resetToPin(2300);
+
+    } finally {
+      $('confirmBtn').disabled = false;
+    }
+  }
+
+  async function searchForgotNumber() {
+    const term = $('forgotSearch').value.trim();
+    const box = $('forgotResults');
+    box.innerHTML = '';
+    $('forgotMessage').textContent = '';
+
+    if (!term) {
+      $('forgotMessage').textContent = 'Enter part of your name.';
+      return;
+    }
+
+    try {
+      const matches = await PDDB.searchStudents(term, 30);
+
+      if (!matches.length) {
+        $('forgotMessage').textContent =
+          'No matching active student found in the stored roster.';
         return;
       }
 
-      await PDDB.addAttendance(selectedStudent);
+      matches.forEach(student => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'search-result';
 
-      $('successName').textContent = selectedStudent.name;
+        const name = document.createElement('strong');
+        name.textContent = student.name;
+
+        const number = document.createElement('span');
+        number.className = 'result-pin';
+        number.textContent = `#${student.pin}`;
+
+        button.append(name, number);
+        button.addEventListener('click', () => {
+          prepareStudentConfirmation(student);
+        });
+
+        box.appendChild(button);
+      });
+
+    } catch (err) {
+      console.error(err);
+      $('forgotMessage').textContent = 'Unable to search the local roster.';
+    }
+  }
+
+  async function submitTrial() {
+    const fullName = $('trialName').value.trim();
+    const email = $('trialEmail').value.trim();
+    const notes = $('trialNotes').value.trim();
+
+    $('trialMessage').textContent = '';
+
+    if (!fullName || !email) {
+      $('trialMessage').textContent =
+        'Please provide both your name and email.';
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      $('trialMessage').textContent =
+        'Please enter a valid email address.';
+      return;
+    }
+
+    $('trialSubmitBtn').disabled = true;
+
+    try {
+      await PDDB.addTrial(fullName, email, notes);
+
+      $('trialName').value = '';
+      $('trialEmail').value = '';
+      $('trialNotes').value = '';
+
+      $('successTitle').textContent = 'Trial Class Signed In';
+      $('successName').textContent = fullName;
       $('syncHint').textContent = navigator.onLine
         ? 'Saved locally. Syncing…'
         : 'Offline — safely queued on this device.';
@@ -108,16 +217,14 @@
         syncNow({ quiet: true }).catch(console.error);
       }
 
-      resetToPin(1800);
+      resetToPin(2000);
 
     } catch (err) {
       console.error(err);
-      $('syncHint').textContent = 'Could not save locally.';
-      showScreen('successScreen');
-      resetToPin(2200);
-
+      $('trialMessage').textContent =
+        'Could not save the trial sign-in on this device.';
     } finally {
-      $('confirmBtn').disabled = false;
+      $('trialSubmitBtn').disabled = false;
     }
   }
 
@@ -125,12 +232,18 @@
     if (!value) return 'Never';
 
     const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? String(value)
+      : date.toLocaleString();
+  }
 
-    if (Number.isNaN(date.getTime())) {
-      return String(value);
-    }
+  async function pendingTotal() {
+    const [attendance, trials] = await Promise.all([
+      PDDB.pendingAttendanceCount(),
+      PDDB.pendingTrialCount()
+    ]);
 
-    return date.toLocaleString();
+    return { attendance, trials, total: attendance + trials };
   }
 
   async function refreshStatus() {
@@ -142,45 +255,43 @@
     $('connectionBadge').classList.toggle('online', online);
     $('connectionBadge').classList.toggle('offline', !online);
 
-    const pending = await PDDB.pendingCount();
-    $('pendingBadge').textContent = `${pending} pending`;
+    const pending = await pendingTotal();
+    $('pendingBadge').textContent = `${pending.total} pending`;
 
-    const rosterLastSync = await PDDB.getMeta('lastRosterSync');
-    const attendanceLastSync =
-      await PDDB.getMeta('lastAttendanceSync');
-
-    if ($('rosterSyncValue')) {
-      $('rosterSyncValue').textContent =
-        formatStoredDate(rosterLastSync);
+    if ($('pendingAttendanceCount')) {
+      $('pendingAttendanceCount').textContent = pending.attendance;
     }
 
-    if ($('attendanceSyncValue')) {
-      $('attendanceSyncValue').textContent =
-        formatStoredDate(attendanceLastSync);
+    if ($('pendingTrialCount')) {
+      $('pendingTrialCount').textContent = pending.trials;
     }
   }
 
   async function refreshLocalScreen(message = '') {
-    $('studentCount').textContent =
-      await PDDB.countStudents();
+    const [
+      students,
+      attendance,
+      trials,
+      pending,
+      rosterLastSync,
+      lastSync
+    ] = await Promise.all([
+      PDDB.countStudents(),
+      PDDB.countAttendance(),
+      PDDB.countTrials(),
+      pendingTotal(),
+      PDDB.getMeta('lastRosterSync'),
+      PDDB.getMeta('lastSuccessfulSync')
+    ]);
 
-    $('attendanceCount').textContent =
-      await PDDB.countAttendance();
-
-    $('pendingCount').textContent =
-      await PDDB.pendingCount();
-
+    $('studentCount').textContent = students;
+    $('attendanceCount').textContent = attendance;
+    $('trialCount').textContent = trials;
+    $('pendingAttendanceCount').textContent = pending.attendance;
+    $('pendingTrialCount').textContent = pending.trials;
+    $('rosterSyncValue').textContent = formatStoredDate(rosterLastSync);
+    $('lastSyncValue').textContent = formatStoredDate(lastSync);
     $('localMessage').textContent = message;
-
-    const rosterLastSync = await PDDB.getMeta('lastRosterSync');
-    const attendanceLastSync =
-      await PDDB.getMeta('lastAttendanceSync');
-
-    $('rosterSyncValue').textContent =
-      formatStoredDate(rosterLastSync);
-
-    $('attendanceSyncValue').textContent =
-      formatStoredDate(attendanceLastSync);
 
     const rows = await PDDB.recentAttendance();
     const box = $('recentAttendance');
@@ -203,14 +314,14 @@
   }
 
   async function fetchRoster() {
-    const url =
-      `${apiUrl()}?api=roster&_=${Date.now()}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-      redirect: 'follow'
-    });
+    const response = await fetch(
+      `${apiUrl()}?api=roster&_=${Date.now()}`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        redirect: 'follow'
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Roster request failed (${response.status})`);
@@ -220,9 +331,7 @@
 
     if (!data || data.success !== true || !Array.isArray(data.students)) {
       throw new Error(
-        data && data.message
-          ? data.message
-          : 'Invalid roster response.'
+        data && data.message ? data.message : 'Invalid roster response.'
       );
     }
 
@@ -232,30 +341,7 @@
     return data.students.length;
   }
 
-  async function uploadPendingAttendance() {
-    const rows = await PDDB.getPendingAttendance();
-
-    if (!rows.length) {
-      return {
-        sent: 0,
-        synced: 0,
-        duplicates: 0,
-        rejected: 0
-      };
-    }
-
-    const payload = {
-      action: 'syncAttendance',
-      attendance: rows.map(row => ({
-        id: row.id,
-        pin: row.pin,
-        name: row.name,
-        timestamp: row.timestamp
-      }))
-    };
-
-    // text/plain keeps this a simple cross-origin request and avoids
-    // browser preflight complications with Apps Script web apps.
+  async function postPayload(payload) {
     const response = await fetch(apiUrl(), {
       method: 'POST',
       redirect: 'follow',
@@ -266,48 +352,88 @@
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Attendance sync failed (${response.status})`
-      );
+      throw new Error(`Sync failed (${response.status})`);
     }
 
-    const data = await response.json();
+    return response.json();
+  }
+
+  async function uploadPendingAttendance() {
+    const rows = await PDDB.getPendingAttendance(250);
+
+    if (!rows.length) {
+      return { sent: 0, synced: 0, duplicates: 0, rejected: 0 };
+    }
+
+    const data = await postPayload({
+      action: 'syncAttendance',
+      attendance: rows.map(row => ({
+        id: row.id,
+        pin: row.pin,
+        name: row.name,
+        timestamp: row.timestamp
+      }))
+    });
 
     if (!data || data.success !== true || !Array.isArray(data.results)) {
       throw new Error(
-        data && data.message
-          ? data.message
-          : 'Invalid attendance response.'
+        data && data.message ? data.message : 'Invalid attendance response.'
       );
     }
 
-    await PDDB.applySyncResults(data.results);
-    await PDDB.setMeta(
-      'lastAttendanceSync',
-      new Date().toISOString()
-    );
+    await PDDB.applyAttendanceResults(data.results);
 
     return {
       sent: rows.length,
       synced: data.results.filter(x => x.status === 'synced').length,
-      duplicates:
-        data.results.filter(x => x.status === 'duplicate').length,
-      rejected:
-        data.results.filter(x => x.status === 'rejected').length
+      duplicates: data.results.filter(x => x.status === 'duplicate').length,
+      rejected: data.results.filter(x => x.status === 'rejected').length
+    };
+  }
+
+  async function uploadPendingTrials() {
+    const rows = await PDDB.getPendingTrials(250);
+
+    if (!rows.length) {
+      return { sent: 0, synced: 0, duplicates: 0, rejected: 0 };
+    }
+
+    const data = await postPayload({
+      action: 'syncTrials',
+      trials: rows.map(row => ({
+        id: row.id,
+        timestamp: row.timestamp,
+        fullName: row.fullName,
+        email: row.email,
+        notes: row.notes
+      }))
+    });
+
+    if (!data || data.success !== true || !Array.isArray(data.results)) {
+      throw new Error(
+        data && data.message ? data.message : 'Invalid trial response.'
+      );
+    }
+
+    await PDDB.applyTrialResults(data.results);
+
+    return {
+      sent: rows.length,
+      synced: data.results.filter(x => x.status === 'synced').length,
+      duplicates: data.results.filter(x => x.status === 'duplicate').length,
+      rejected: data.results.filter(x => x.status === 'rejected').length
     };
   }
 
   async function syncNow(options = {}) {
     const quiet = Boolean(options.quiet);
 
-    if (syncInProgress) {
-      return;
-    }
+    if (syncInProgress) return;
 
     if (!navigator.onLine) {
       if (!quiet && $('localMessage')) {
         $('localMessage').textContent =
-          'Offline. Sign-ins will stay queued until connection returns.';
+          'Offline. Sign-ins will remain queued until connection returns.';
       }
       return;
     }
@@ -323,29 +449,24 @@
     syncInProgress = true;
 
     const syncButton = $('syncNowBtn');
-
     if (syncButton) {
       syncButton.disabled = true;
       syncButton.textContent = 'Syncing…';
     }
 
     try {
-      // Upload first so attendance recorded against the previously cached
-      // roster is preserved even if member status changed since last sync.
-      const attendanceResult =
-        await uploadPendingAttendance();
+      const attendanceResult = await uploadPendingAttendance();
+      const trialResult = await uploadPendingTrials();
+      const rosterCount = await fetchRoster();
 
-      const rosterCount =
-        await fetchRoster();
-
+      await PDDB.setMeta('lastSuccessfulSync', new Date().toISOString());
       await refreshStatus();
 
       if ($('localScreen').classList.contains('active')) {
         await refreshLocalScreen(
           `Sync complete. ${rosterCount} active students stored. ` +
-          `${attendanceResult.synced} uploaded, ` +
-          `${attendanceResult.duplicates} duplicate(s), ` +
-          `${attendanceResult.rejected} rejected.`
+          `${attendanceResult.synced} attendance uploaded, ` +
+          `${trialResult.synced} trial sign-in(s) uploaded.`
         );
       }
 
@@ -353,8 +474,7 @@
       console.error('Sync failed:', err);
 
       if (!quiet && $('localMessage')) {
-        $('localMessage').textContent =
-          `Sync failed: ${err.message}`;
+        $('localMessage').textContent = `Sync failed: ${err.message}`;
       }
 
     } finally {
@@ -369,20 +489,43 @@
     }
   }
 
-  document
-    .querySelectorAll('[data-digit]')
-    .forEach(button => {
-      button.addEventListener('click', () => {
-        if (pin.length >= 3) return;
+  function clearReconnectTimers() {
+    while (reconnectTimers.length) {
+      clearTimeout(reconnectTimers.pop());
+    }
+  }
 
-        pin += button.dataset.digit;
-        renderPin();
+  function scheduleReconnectSync() {
+    clearReconnectTimers();
 
-        if (pin.length === 3) {
-          processPin();
-        }
-      });
+    [0, 3000, 10000, 30000].forEach(delay => {
+      reconnectTimers.push(
+        setTimeout(async () => {
+          if (!navigator.onLine) return;
+
+          await refreshStatus();
+          const pending = await pendingTotal();
+
+          if (pending.total > 0) {
+            syncNow({ quiet: true }).catch(console.error);
+          }
+        }, delay)
+      );
     });
+  }
+
+  document.querySelectorAll('[data-digit]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (pin.length >= 3) return;
+
+      pin += button.dataset.digit;
+      renderPin();
+
+      if (pin.length === 3) {
+        processPin();
+      }
+    });
+  });
 
   $('clearBtn').addEventListener('click', () => {
     pin = '';
@@ -390,11 +533,30 @@
     $('pinMessage').textContent = '';
   });
 
-  $('cancelConfirmBtn')
-    .addEventListener('click', () => resetToPin());
+  $('cancelConfirmBtn').addEventListener('click', () => resetToPin());
+  $('confirmBtn').addEventListener('click', confirmSignIn);
 
-  $('confirmBtn')
-    .addEventListener('click', confirmSignIn);
+  $('forgotBtn').addEventListener('click', () => {
+    $('forgotSearch').value = '';
+    $('forgotMessage').textContent = '';
+    $('forgotResults').innerHTML = '';
+    showScreen('forgotScreen');
+    setTimeout(() => $('forgotSearch').focus(), 50);
+  });
+
+  $('forgotBackBtn').addEventListener('click', () => resetToPin());
+  $('forgotSearchBtn').addEventListener('click', searchForgotNumber);
+  $('forgotSearch').addEventListener('keydown', event => {
+    if (event.key === 'Enter') searchForgotNumber();
+  });
+
+  $('trialBtn').addEventListener('click', () => {
+    $('trialMessage').textContent = '';
+    showScreen('trialScreen');
+  });
+
+  $('trialBackBtn').addEventListener('click', () => resetToPin());
+  $('trialSubmitBtn').addEventListener('click', submitTrial);
 
   $('showLocalBtn').addEventListener('click', async () => {
     await refreshLocalScreen();
@@ -405,51 +567,46 @@
     await syncNow();
   });
 
-  $('clearAttendanceBtn').addEventListener('click', async () => {
-    if (
-      !confirm(
-        'Clear ALL locally stored attendance on this device? ' +
-        'Do not do this if there are pending sign-ins.'
-      )
-    ) {
-      return;
-    }
-
-    const pending = await PDDB.pendingCount();
-
-    if (pending > 0) {
-      alert(
-        `There are ${pending} pending sign-in(s). ` +
-        'Sync them before clearing attendance.'
-      );
-      return;
-    }
-
-    await PDDB.clearAttendance();
-    await refreshLocalScreen('Local attendance cleared.');
-    await refreshStatus();
-  });
-
   $('backBtn').addEventListener('click', () => resetToPin());
 
   window.addEventListener('online', () => {
     refreshStatus();
-    syncNow({ quiet: true }).catch(console.error);
+    scheduleReconnectSync();
   });
 
-  window.addEventListener('offline', refreshStatus);
+  window.addEventListener('offline', () => {
+    clearReconnectTimers();
+    refreshStatus();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && navigator.onLine) {
+      scheduleReconnectSync();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (navigator.onLine) {
+      scheduleReconnectSync();
+    }
+  });
+
+  setInterval(async () => {
+    if (document.hidden || !navigator.onLine || syncInProgress) return;
+
+    const pending = await pendingTotal();
+
+    if (pending.total > 0) {
+      syncNow({ quiet: true }).catch(console.error);
+    }
+  }, 60000);
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        await navigator.serviceWorker.register(
-          './service-worker.js'
-        );
+        await navigator.serviceWorker.register('./service-worker.js');
       } catch (err) {
-        console.error(
-          'Service worker registration failed',
-          err
-        );
+        console.error('Service worker registration failed', err);
       }
     });
   }
@@ -458,8 +615,7 @@
     renderPin();
     await refreshStatus();
 
-    const studentCount =
-      await PDDB.countStudents();
+    const studentCount = await PDDB.countStudents();
 
     if (!studentCount && !navigator.onLine) {
       $('pinMessage').textContent =

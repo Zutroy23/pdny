@@ -2,75 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#311b5c">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="black-translucent"
-  >
-  <meta
-    name="apple-mobile-web-app-title"
-    content="PD Attendance"
-  >
-
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PD Attendance">
   <title>Purple Dragon Attendance</title>
-
-  <link
-    rel="manifest"
-    href="./manifest.webmanifest"
-  >
-  <link
-    rel="apple-touch-icon"
-    href="./icon-192.png"
-  >
-  <link
-    rel="stylesheet"
-    href="./styles.css"
-  >
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <main class="app-shell">
-
     <header class="statusbar">
       <div>
         <strong>Purple Dragon Attendance</strong>
-        <div class="subtle">
-          Offline attendance
-        </div>
+        <div class="subtle">Offline-ready attendance</div>
       </div>
-
       <div class="status-right">
-        <span
-          id="connectionBadge"
-          class="badge"
-        >Checking…</span>
-
-        <span
-          id="pendingBadge"
-          class="badge"
-        >0 pending</span>
+        <span id="connectionBadge" class="badge">Checking…</span>
+        <span id="pendingBadge" class="badge">0 pending</span>
       </div>
     </header>
 
-    <section
-      id="pinScreen"
-      class="screen active"
-    >
-      <h1>Enter Your Number</h1>
+    <section id="pinScreen" class="screen active compact-screen">
+      <img class="crest" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
+      <h1>Student Sign-In</h1>
+      <div id="pinDisplay" class="pin-display">_ _ _</div>
 
-      <div
-        id="pinDisplay"
-        class="pin-display"
-      >_ _ _</div>
-
-      <div
-        class="keypad"
-        aria-label="Student number keypad"
-      >
+      <div class="keypad" aria-label="Student number keypad">
         <button data-digit="1">1</button>
         <button data-digit="2">2</button>
         <button data-digit="3">3</button>
@@ -80,146 +40,101 @@
         <button data-digit="7">7</button>
         <button data-digit="8">8</button>
         <button data-digit="9">9</button>
-        <button
-          id="clearBtn"
-          class="secondary"
-        >Clear</button>
+        <button id="clearBtn" class="secondary">Clear</button>
         <button data-digit="0">0</button>
-        <button
-          class="secondary"
-          disabled
-          aria-hidden="true"
-        ></button>
+        <button class="secondary" disabled aria-hidden="true"></button>
       </div>
 
-      <div
-        id="pinMessage"
-        class="message"
-      ></div>
+      <div id="pinMessage" class="message"></div>
 
-      <button
-        id="showLocalBtn"
-        class="admin-link"
-      >
-        Device / Sync Status
-      </button>
+      <div class="pill-row">
+        <button id="forgotBtn" class="pill-button">Forgot Your Number?</button>
+        <button id="trialBtn" class="pill-button">Trial Class Sign-In</button>
+      </div>
+
+      <button id="showLocalBtn" class="admin-link">Device / Sync Status</button>
     </section>
 
-
-    <section
-      id="confirmScreen"
-      class="screen"
-    >
-      <h1>Is this you?</h1>
-
-      <div
-        id="confirmName"
-        class="student-name"
-      ></div>
-
-      <div
-        id="confirmPin"
-        class="subtle"
-      ></div>
-
+    <section id="confirmScreen" class="screen">
+      <img class="crest crest-small" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
+      <h1>Confirm Entry</h1>
+      <div class="subtle">Is this you?</div>
+      <div id="confirmName" class="student-name"></div>
+      <div id="confirmPin" class="subtle"></div>
       <div class="actions">
-        <button
-          id="cancelConfirmBtn"
-          class="secondary large"
-        >No</button>
-
-        <button
-          id="confirmBtn"
-          class="primary large"
-        >Yes, Sign In</button>
+        <button id="cancelConfirmBtn" class="secondary large">No</button>
+        <button id="confirmBtn" class="primary large">Yes, Sign In</button>
       </div>
     </section>
 
+    <section id="forgotScreen" class="screen">
+      <img class="crest crest-small" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
+      <h1>Forgot Your Number?</h1>
+      <div class="subtle centered">Search by first or last name. This works from the roster stored on this device.</div>
+      <div class="form-card">
+        <label for="forgotSearch">Name</label>
+        <div class="inline-search">
+          <input id="forgotSearch" type="text" autocomplete="off" placeholder="e.g. John">
+          <button id="forgotSearchBtn" class="primary">Find</button>
+        </div>
+        <div id="forgotMessage" class="message compact-message"></div>
+        <div id="forgotResults" class="search-results"></div>
+      </div>
+      <button id="forgotBackBtn" class="secondary">Back</button>
+    </section>
 
-    <section
-      id="successScreen"
-      class="screen"
-    >
+    <section id="trialScreen" class="screen">
+      <img class="crest crest-small" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
+      <h1>Trial Class Sign-In</h1>
+      <div class="form-card">
+        <label for="trialName">Full Name</label>
+        <input id="trialName" type="text" autocomplete="name" placeholder="Full name">
+
+        <label for="trialEmail">Email</label>
+        <input id="trialEmail" type="email" autocomplete="email" placeholder="name@example.com">
+
+        <label for="trialNotes">Notes <span class="subtle">(optional)</span></label>
+        <textarea id="trialNotes" rows="3" placeholder="Anything the instructor should know"></textarea>
+
+        <div id="trialMessage" class="message compact-message"></div>
+
+        <div class="actions">
+          <button id="trialBackBtn" class="secondary">Back</button>
+          <button id="trialSubmitBtn" class="primary">Sign In</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="successScreen" class="screen">
+      <img class="crest crest-small" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
       <div class="success-mark">✓</div>
-      <h1>Signed In</h1>
-
-      <div
-        id="successName"
-        class="student-name"
-      ></div>
-
-      <div class="subtle">
-        Saved on this device.
-      </div>
-
-      <div
-        id="syncHint"
-        class="message"
-      ></div>
+      <h1 id="successTitle">Signed In</h1>
+      <div id="successName" class="student-name"></div>
+      <div class="subtle">Saved safely on this device.</div>
+      <div id="syncHint" class="message"></div>
     </section>
 
-
-    <section
-      id="localScreen"
-      class="screen"
-    >
+    <section id="localScreen" class="screen">
       <h1>Device / Sync Status</h1>
 
       <div class="panel">
-        <div>
-          <strong>Students stored:</strong>
-          <span id="studentCount">0</span>
-        </div>
-
-        <div>
-          <strong>Attendance stored:</strong>
-          <span id="attendanceCount">0</span>
-        </div>
-
-        <div>
-          <strong>Pending sync:</strong>
-          <span id="pendingCount">0</span>
-        </div>
-
-        <div>
-          <strong>Roster last updated:</strong>
-          <span id="rosterSyncValue">Never</span>
-        </div>
-
-        <div>
-          <strong>Attendance last synced:</strong>
-          <span id="attendanceSyncValue">Never</span>
-        </div>
+        <div><strong>Students stored:</strong> <span id="studentCount">0</span></div>
+        <div><strong>Attendance stored:</strong> <span id="attendanceCount">0</span></div>
+        <div><strong>Trial sign-ins stored:</strong> <span id="trialCount">0</span></div>
+        <div><strong>Pending attendance:</strong> <span id="pendingAttendanceCount">0</span></div>
+        <div><strong>Pending trials:</strong> <span id="pendingTrialCount">0</span></div>
+        <div><strong>Roster last updated:</strong> <span id="rosterSyncValue">Never</span></div>
+        <div><strong>Last successful sync:</strong> <span id="lastSyncValue">Never</span></div>
       </div>
 
       <div class="actions wrap">
-        <button
-          id="syncNowBtn"
-          class="primary"
-        >Sync Now</button>
-
-        <button
-          id="clearAttendanceBtn"
-          class="danger"
-        >Clear Attendance</button>
-
-        <button
-          id="backBtn"
-          class="secondary"
-        >Back</button>
+        <button id="syncNowBtn" class="primary">Sync Now</button>
+        <button id="backBtn" class="secondary">Back</button>
       </div>
 
-      <div
-        id="localMessage"
-        class="message"
-      ></div>
-
-      <div
-        id="recentAttendance"
-        class="recent-list"
-      ></div>
+      <div id="localMessage" class="message"></div>
+      <div id="recentAttendance" class="recent-list"></div>
     </section>
-
   </main>
 
   <script src="./config.js"></script>

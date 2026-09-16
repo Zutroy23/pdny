@@ -1,4 +1,5 @@
 * { box-sizing: border-box; }
+
 :root {
   --purple: #311b5c;
   --purple2: #4a2a7d;
@@ -10,6 +11,7 @@
   --green: #2e7d32;
   --red: #b71c1c;
 }
+
 html, body {
   margin: 0;
   min-height: 100%;
@@ -17,15 +19,12 @@ html, body {
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
 }
-body {
-  min-height: 100dvh;
-}
-button, input {
-  font: inherit;
-}
-button {
-  touch-action: manipulation;
-}
+
+body { min-height: 100dvh; }
+
+button, input, textarea { font: inherit; }
+button { touch-action: manipulation; cursor: pointer; }
+
 .app-shell {
   width: min(100%, 760px);
   min-height: 100dvh;
@@ -33,20 +32,23 @@ button {
   background: linear-gradient(180deg, #1b0b30, var(--bg));
   padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
 }
+
 .statusbar {
   display: flex;
   gap: 12px;
   justify-content: space-between;
   align-items: center;
-  min-height: 72px;
+  min-height: 64px;
   border-bottom: 1px solid #3d2c52;
 }
+
 .status-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 5px;
 }
+
 .badge {
   border: 1px solid #66517f;
   border-radius: 999px;
@@ -54,115 +56,257 @@ button {
   font-size: 12px;
   background: #211236;
 }
+
 .badge.online { border-color: #2e7d32; }
 .badge.offline { border-color: #c77700; }
+
 .subtle {
   color: var(--muted);
   font-size: 14px;
 }
+
+.centered {
+  text-align: center;
+  max-width: 520px;
+  line-height: 1.35;
+}
+
 .screen {
   display: none;
-  min-height: calc(100dvh - 90px);
-  padding: 24px 0;
+  min-height: calc(100dvh - 78px);
+  padding: 18px 0;
   flex-direction: column;
   align-items: center;
 }
+
 .screen.active { display: flex; }
-h1 {
-  margin: 12px 0 20px;
-  text-align: center;
+
+.compact-screen { padding-top: 10px; }
+
+.crest {
+  width: auto;
+  height: clamp(68px, 10dvh, 92px);
+  max-width: 38vw;
+  object-fit: contain;
+  margin-top: 2px;
 }
+
+.crest-small {
+  height: clamp(60px, 8dvh, 78px);
+}
+
+h1 {
+  margin: 8px 0 14px;
+  text-align: center;
+  font-size: clamp(24px, 5vw, 32px);
+}
+
 .pin-display {
-  font-size: clamp(34px, 8vw, 54px);
+  font-size: clamp(32px, 7vw, 48px);
   font-weight: 800;
   letter-spacing: .16em;
   color: var(--gold);
-  min-height: 70px;
+  min-height: 54px;
 }
+
 .keypad {
-  width: min(94vw, 480px);
+  width: min(94vw, 460px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
+
 .keypad button {
-  min-height: 72px;
+  min-height: clamp(54px, 8.2dvh, 68px);
   border: 0;
   border-radius: 14px;
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 800;
   color: white;
   background: var(--purple2);
 }
+
 .keypad button:active { transform: scale(.98); }
+
 .keypad button.secondary {
   font-size: 15px;
   background: #3a3342;
 }
+
 .actions {
   display: flex;
   gap: 12px;
   justify-content: center;
-  margin-top: 26px;
+  margin-top: 20px;
 }
+
 .actions.wrap { flex-wrap: wrap; }
-button.primary, button.secondary, button.danger {
+
+button.primary,
+button.secondary,
+button.danger {
   border: 0;
   border-radius: 12px;
   padding: 12px 18px;
   color: #fff;
   font-weight: 700;
 }
+
 button.primary { background: var(--green); }
 button.secondary { background: #51495a; }
 button.danger { background: var(--red); }
+
 button.large {
   min-width: 140px;
-  min-height: 58px;
+  min-height: 56px;
   font-size: 18px;
 }
+
+.pill-row {
+  width: min(94vw, 460px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pill-button {
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.26);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+.pill-button:active {
+  transform: scale(.98);
+  background: rgba(255,255,255,.14);
+}
+
 .student-name {
   font-size: clamp(28px, 7vw, 42px);
   font-weight: 800;
   text-align: center;
   margin: 10px;
 }
+
 .message {
-  min-height: 24px;
-  margin-top: 18px;
+  min-height: 23px;
+  margin-top: 12px;
   text-align: center;
   color: #ffd180;
 }
+
+.compact-message {
+  margin-top: 8px;
+  min-height: 18px;
+}
+
 .success-mark {
-  width: 96px;
-  height: 96px;
+  width: 86px;
+  height: 86px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 58px;
+  font-size: 52px;
   background: var(--green);
-  margin-top: 50px;
+  margin-top: 16px;
 }
+
 .admin-link {
-  margin-top: 34px;
+  margin-top: 12px;
   border: 0;
   background: transparent;
   color: #d1c4e9;
   text-decoration: underline;
+  font-size: 13px;
 }
-.panel {
+
+.panel,
+.form-card {
   width: min(94vw, 560px);
   border: 1px solid #4c3764;
   background: var(--panel);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
+}
+
+.panel {
   display: grid;
   gap: 10px;
 }
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.form-card label {
+  color: #ddd5e7;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.form-card input,
+.form-card textarea {
+  width: 100%;
+  border: 1px solid #5c476f;
+  border-radius: 10px;
+  background: #0c0614;
+  color: #fff;
+  padding: 11px 12px;
+  outline: none;
+}
+
+.form-card input:focus,
+.form-card textarea:focus {
+  border-color: var(--gold);
+}
+
+.inline-search {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-search input { flex: 1; }
+
+.search-results {
+  display: grid;
+  gap: 8px;
+  max-height: 42dvh;
+  overflow-y: auto;
+}
+
+.search-result {
+  width: 100%;
+  border: 1px solid #513966;
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #241136;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.search-result .result-pin {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
 .recent-list {
   width: min(94vw, 650px);
   margin-top: 18px;
 }
+
 .recent-row {
   padding: 10px 12px;
   border-bottom: 1px solid #342348;
@@ -170,6 +314,21 @@ button.large {
   justify-content: space-between;
   gap: 12px;
 }
+
+@media (max-height: 720px) and (orientation: portrait) {
+  .statusbar { min-height: 56px; }
+  .screen { min-height: calc(100dvh - 68px); padding-top: 7px; }
+  .crest { height: 52px; }
+  .crest-small { height: 48px; }
+  h1 { margin: 5px 0 8px; font-size: 22px; }
+  .pin-display { min-height: 44px; font-size: 31px; }
+  .keypad { gap: 6px; }
+  .keypad button { min-height: 48px; font-size: 24px; }
+  .pill-button { min-height: 36px; font-size: 13px; padding: 6px 8px; }
+  .message { margin-top: 6px; }
+  .admin-link { margin-top: 6px; }
+}
+
 @media (min-width: 700px) {
   .app-shell {
     min-height: calc(100dvh - 30px);
@@ -178,5 +337,6 @@ button.large {
     overflow: hidden;
     border: 1px solid #3d2c52;
   }
+
   .screen { min-height: 640px; }
 }
