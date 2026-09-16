@@ -1347,3 +1347,36 @@ h1,
     width: min(100%, 620px);
   }
 }
+
+
+/* v0.65 transient API / loading states */
+.inline-retry-btn {
+  margin-left: 10px;
+  padding: 7px 14px;
+  min-height: 36px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 10px;
+  background: rgba(255,255,255,.10);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.student-manage-result.is-loading {
+  opacity: .62;
+  pointer-events: none;
+}
+.student-manage-result.is-loading::after {
+  content: 'Loading…';
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--pd-gold, #f2bf4f);
+}
+@media (max-width: 420px) {
+  .inline-retry-btn {
+    display: block;
+    margin: 8px auto 0;
+  }
+}

@@ -1,4 +1,4 @@
-# Purple Dragon Attendance PWA — Development v0.64
+# Purple Dragon Attendance PWA — Development v0.65
 
 
 ## New in development v0.63
@@ -143,7 +143,7 @@ The installed PWA icon now uses a Purple Dragon-themed PD/belt badge rather than
 ## v0.63 official-logo icon trial
 This package uses the official Purple Dragon crest itself as the installed app icon (cropped to the crest, without the lower AT letters) so you can test how the real logo reads on-device.
 
-## New in development v0.64 — responsive layout audit
+## New in development v0.65 — responsive layout audit
 - Audited all 23 app/admin screens for narrow phones, short portrait screens, landscape phones, and tablets.
 - Removed viewport-width sizing that could make nested cards wider than their containers.
 - Added narrow-screen stacking rules for search controls, date ranges, action buttons, and admin tiles.
@@ -152,9 +152,17 @@ This package uses the official Purple Dragon crest itself as the installed app i
 - The manifest now allows both portrait and landscape orientation.
 - Main and admin screens are allowed to scroll naturally when content is taller than the device rather than squeezing/overlapping.
 - The launch/install icon now uses separate normal and maskable crest assets. The maskable version has a larger safe margin so the top of the Purple Dragon crest is not clipped on Android launch/splash screens.
-- Visible build number is **v0.64**.
+- Visible build number is **v0.65**.
 
-No Apps Script backend changes are required for v0.64. Keep your existing `config.js`.
+No Apps Script backend changes are required for v0.65. Keep your existing `config.js`.
 
-## v0.64 logo icon patch
+## v0.65 logo icon patch
 This package updates the app icon files to use the exact uploaded Purple Dragon crest/logo on a white background. The maskable icons use extra padding so the top of the crest should no longer be clipped on app launch or on Android home-screen masking.
+
+## New in development v0.65 — resilient Apps Script requests
+- Admin API responses are read as text and validated before JSON parsing, so temporary Google HTML/error pages no longer surface as raw `Unexpected token '<'` errors.
+- Transient network failures, HTML responses, timeouts, and common 5xx/429 responses retry automatically with short backoff delays.
+- Admin requests have a 45-second per-attempt ceiling so truly stalled requests eventually recover instead of hanging forever.
+- Manage Students shows `Loading student…` while a selected student record is being fetched and visually marks the selected row as loading.
+- Manage Students and Attendance Dashboard show a friendly Retry button after automatic retries are exhausted.
+- No Apps Script backend changes are required for v0.65.

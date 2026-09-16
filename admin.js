@@ -32,6 +32,94 @@
     ].join('-');
   }
 
+  const ADMIN_RETRY_DELAYS = [0, 1500, 4000];
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function friendlyAdminError(err) {
+    const message = String(err && err.message ? err.message : err || '');
+
+    if (/failed to fetch|networkerror|load failed/i.test(message)) {
+      return 'Could not reach Google Apps Script. Check your connection and try again.';
+    }
+
+    if (/unexpected html|returned an html|doctype|not valid json/i.test(message)) {
+      return 'Google Apps Script returned a temporary web page instead of app data. Please try again.';
+    }
+
+    if (/timed out|timeout|aborterror/i.test(message)) {
+      return 'Google Apps Script is taking longer than expected. Please try again.';
+    }
+
+    return message || 'Admin request failed. Please try again.';
+  }
+
+  function isRetryableAdminError(err) {
+    if (!err) return false;
+    if (err.retryable === true) return true;
+    const message = String(err.message || err);
+    return /failed to fetch|networkerror|load failed|unexpected html|returned an html|doctype|timed out|timeout|aborterror/i.test(message);
+  }
+
+  async function fetchAdminAttempt(action, data) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
+    try {
+      const response = await fetch(window.PD_CONFIG.API_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'adminAction',
+          adminAction: action,
+          adminPin,
+          data
+        }),
+        signal: controller.signal
+      });
+
+      const text = await response.text();
+      const trimmed = text.trim();
+      const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+      const looksHtml = /^<!doctype html/i.test(trimmed) || /^<html/i.test(trimmed) || contentType.includes('text/html');
+
+      if (looksHtml) {
+        const err = new Error('Google Apps Script returned an HTML page instead of JSON.');
+        err.retryable = true;
+        err.status = response.status;
+        throw err;
+      }
+
+      if (!response.ok) {
+        const err = new Error(`Google Apps Script returned HTTP ${response.status}.`);
+        err.retryable = [408, 429, 500, 502, 503, 504].includes(response.status);
+        err.status = response.status;
+        throw err;
+      }
+
+      let result;
+      try {
+        result = JSON.parse(trimmed);
+      } catch (parseErr) {
+        const err = new Error('Google Apps Script returned a response that was not valid JSON.');
+        err.retryable = true;
+        throw err;
+      }
+
+      if (!result || result.success !== true) {
+        throw new Error(result && result.message ? result.message : 'Admin request failed.');
+      }
+
+      return result;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   async function api(action, data = {}) {
     if (!window.PD_CONFIG || !window.PD_CONFIG.API_URL) {
       throw new Error('Apps Script API URL is not configured.');
@@ -41,29 +129,51 @@
       throw new Error('Admin functions require an internet connection.');
     }
 
-    const response = await fetch(window.PD_CONFIG.API_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'adminAction',
-        adminAction: action,
-        adminPin,
-        data
-      })
-    });
+    let lastError = null;
 
-    const result = await response.json();
+    for (let attempt = 0; attempt < ADMIN_RETRY_DELAYS.length; attempt++) {
+      if (ADMIN_RETRY_DELAYS[attempt]) {
+        await sleep(ADMIN_RETRY_DELAYS[attempt]);
+      }
 
-    if (!result || result.success !== true) {
-      throw new Error(result && result.message ? result.message : 'Admin request failed.');
+      try {
+        return await fetchAdminAttempt(action, data);
+      } catch (err) {
+        lastError = err;
+        console.warn(`Admin API ${action} attempt ${attempt + 1} failed`, err);
+
+        if (!isRetryableAdminError(err) || attempt === ADMIN_RETRY_DELAYS.length - 1) {
+          break;
+        }
+      }
     }
 
-    return result;
+    throw new Error(friendlyAdminError(lastError));
   }
 
   function message(id, text = '') {
-    $(id).textContent = text;
+    const el = $(id);
+    if (!el) return;
+    el.textContent = text;
+  }
+
+  function retryMessage(id, text, retryFn) {
+    const el = $(id);
+    if (!el) return;
+    el.innerHTML = '';
+
+    const span = document.createElement('span');
+    span.textContent = text;
+    el.appendChild(span);
+
+    if (typeof retryFn === 'function') {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'inline-retry-btn';
+      btn.textContent = 'Retry';
+      btn.addEventListener('click', retryFn);
+      el.appendChild(btn);
+    }
   }
 
   function backHome() {
@@ -596,7 +706,7 @@
       renderDashboardStudentList(result);
 
     } catch (err) {
-      message('dashboardMessage', err.message);
+      retryMessage('dashboardMessage', err.message, loadDashboard);
     }
   }
 
@@ -766,6 +876,7 @@
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'search-result student-manage-result';
+        row.dataset.pin = student.pin;
 
         const left = document.createElement('span');
         const name = document.createElement('strong');
@@ -780,11 +891,15 @@
         $('manageStudentResults').appendChild(row);
       });
     } catch (err) {
-      message('manageStudentMessage', err.message);
+      retryMessage('manageStudentMessage', err.message, searchManageStudents);
     }
   }
 
   async function openStudentEditor(pin) {
+    const row = document.querySelector(`.student-manage-result[data-pin="${CSS.escape(String(pin))}"]`);
+    if (row) row.classList.add('is-loading');
+    message('manageStudentMessage', 'Loading student…');
+
     try {
       await ensureRanksLoaded();
       const result = await api('getStudent', { pin });
@@ -797,10 +912,13 @@
       populateRankSelect($('editStudentRank'), editingStudent.rankId || '', true);
       $('editStudentElite').checked = Boolean(editingStudent.elite);
       updateStudentBeltPreview();
+      message('manageStudentMessage', '');
       message('editStudentMessage', '');
       show('adminStudentEditScreen');
     } catch (err) {
-      message('manageStudentMessage', err.message);
+      retryMessage('manageStudentMessage', err.message, () => openStudentEditor(pin));
+    } finally {
+      if (row) row.classList.remove('is-loading');
     }
   }
 
