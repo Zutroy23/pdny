@@ -839,3 +839,69 @@ body.admin-mode .app-shell {
   .promotion-override .check-inline { min-height: 34px; }
   .student-editor .belt-image { height: 72px; max-height: 72px; }
 }
+
+
+/* v0.63 information architecture + belt setup */
+#adminHubScreen .main-admin-grid {
+  max-width: 520px;
+}
+
+#adminBeltManagementScreen .admin-submenu-grid {
+  max-width: 520px;
+}
+
+.initialization-controls,
+.initialization-list {
+  width: min(88vw, 620px);
+}
+
+.initialization-controls .inline-search {
+  align-items: stretch;
+}
+
+.initialization-controls select {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.initialization-row .promotion-fields {
+  min-width: 0;
+}
+
+.initialization-row strong {
+  overflow-wrap: anywhere;
+}
+.initialization-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px !important;
+  height: 24px;
+  margin: 1px 0 0;
+  transform: none;
+  flex: 0 0 24px;
+  border: 2px solid #8b7a9e;
+  border-radius: 5px;
+  background: #12081f;
+  display: grid;
+  place-content: center;
+}
+.initialization-checkbox::before {
+  content: "✓";
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  color: #fff;
+  transform: scale(0);
+}
+.initialization-checkbox:checked { background: #2e7d32; border-color: #3fa044; }
+.initialization-checkbox:checked::before { transform: scale(1); }
+.initialization-rank-select,
+#initializeBulkRank {
+  color: #fff;
+  background: #12081f;
+  border-color: #5b476f;
+  min-height: 48px;
+  color-scheme: dark;
+}
+.initialization-rank-select option,
+#initializeBulkRank option { color: #fff; background: #170a28; }

@@ -1,16 +1,16 @@
-importScripts('./version.js?v=6.2');
+importScripts('./version.js?v=0.63');
 const CACHE_NAME = `purple-dragon-pwa-v${self.PD_APP_VERSION}`;
 
 const APP_SHELL = [
   './',
-  './index.html?v=6.2',
-  './styles.css?v=6.2',
+  './index.html?v=0.63',
+  './styles.css?v=0.63',
   './config.js',
-  './version.js?v=6.2',
-  './db.js?v=6.2',
-  './belt-images.js?v=6.2',
-  './app.js?v=6.2',
-  './admin.js?v=6.2',
+  './version.js?v=0.63',
+  './db.js?v=0.63',
+  './belt-images.js?v=0.63',
+  './app.js?v=0.63',
+  './admin.js?v=0.63',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -23,6 +23,12 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', event => {
@@ -83,7 +89,7 @@ self.addEventListener('fetch', event => {
         .catch(async () => {
           const exact = await caches.match(request);
           if (exact) return exact;
-          return caches.match('./index.html?v=6.2');
+          return caches.match('./index.html?v=0.63');
         })
     );
     return;

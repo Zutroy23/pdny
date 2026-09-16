@@ -1,8 +1,20 @@
-# Purple Dragon Attendance PWA — Phase 6.2
+# Purple Dragon Attendance PWA — Development v0.63
 
-Phase 6.2 adds belt/rank tracking, student management, bulk post-exam promotions, and belt images while preserving the existing offline-first attendance workflow.
 
-## New in Phase 6.2
+## New in development v0.63
+
+- Development versioning now uses **0.xx**; **1.0** is reserved for the first production-ready release.
+- Main hub simplified to day-to-day functions: Manage Students, Today’s Sign-ins, Attendance Catch Up, Reporting, Admin.
+- **Add Student** moved into Admin.
+- New **Admin → Belt Management** submenu.
+- Belt Promotions moved under Belt Management.
+- New **Initialize Current Ranks** bulk setup tool.
+- Belt Promotions now lists all active students and automatically checks students who attended on the selected exam date.
+- New Admin **Check for Update** button.
+
+v0.63 adds belt/rank tracking, student management, bulk post-exam promotions, and belt images while preserving the existing offline-first attendance workflow.
+
+## New in v0.63
 
 - New students default to **Unofficial White Belt** and **Elite = false**.
 - Active-roster sync now includes rank, Elite status, belt image, base days, and standard next exam rank.
@@ -29,7 +41,7 @@ Phase 6.2 adds belt/rank tracking, student management, bulk post-exam promotions
   - Column E: `Rank ID`
   - Column F: `Elite`
 - 89 local belt PNG assets are included under `/belts`, so belt confirmation works offline after the service worker is installed.
-- PWA cache bumped to `purple-dragon-pwa-v8`.
+- PWA cache bumped to `purple-dragon-pwa-v0.63`.
 - The obsolete PWA **Refresh App Cache** button was removed.
 - Fixed the nested Attendance-by-Student list width overflow.
 - Fixed admin deletion of today's attendance so it can also remove the matching local PWA attendance record (`window.PDDB` is now exposed intentionally for this admin action).
@@ -49,7 +61,7 @@ New students are automatically:
 
 ### 1. Apps Script
 
-Replace the current Apps Script `Code.gs` contents with `Dojo_Code_PWA_Phase6.gs`.
+Replace the current Apps Script `Code.gs` contents with `Dojo_Code_PWA_v0.63.gs`.
 
 Then:
 
@@ -63,7 +75,7 @@ Do not create a different endpoint unless you intentionally want the PWA URL con
 
 ### 2. GitHub Pages PWA
 
-Upload/replace the Phase 6.2 PWA files in the `pdny` repository.
+Upload/replace the v0.63 PWA files in the `pdny` repository.
 
 **Keep your existing `config.js`.** This package intentionally contains only `config.example.js`; do not delete or overwrite your configured `config.js`.
 
@@ -73,7 +85,7 @@ Commit the changes and wait for GitHub Pages to publish.
 
 ### 3. Refresh the installed PWA
 
-Open the PWA while online, then close and reopen it once so service worker v8 can install and take control.
+Open the PWA while online, then close and reopen it once so service worker v0.63 can install and take control.
 
 Use **Device / Sync Status → Sync Now** once after deployment to confirm the new roster fields have downloaded.
 
@@ -84,34 +96,46 @@ Use **Device / Sync Status → Sync Now** once after deployment to confirm the n
 3. Choose an existing student and assign a rank.
 4. Save and return to student sign-in.
 5. Sign that student in and confirm the correct belt image/rank appears.
-6. Add a test student and verify the new student is Unofficial White.
-7. Open **Belt Promotions**.
-8. Select a student and verify the target defaults to the next full belt/rank rather than Bar 1.
-9. Change one target manually to a bar/partial rank to test override.
-10. Test the Elite checkbox on an eligible rank and verify its distinct belt image.
-11. Confirm a `BeltHistory` sheet was created after the first rank change/promotion.
-12. Verify Today's Sign-ins delete still works and permits a deleted student to sign in again on that device.
+6. Open **Admin → Add Student**, add a test student, and verify the new student is Unofficial White.
+7. Open **Admin → Belt Management → Initialize Current Ranks** and verify bulk assignment works.
+8. Open **Admin → Belt Management → Belt Promotions**.
+9. Select a student and verify the target defaults to the next full belt/rank rather than Bar 1.
+10. Change one target manually to a bar/partial rank to test override.
+11. Test the Elite checkbox on an eligible rank and verify its distinct belt image.
+12. Confirm a `BeltHistory` sheet was created after the first rank change/promotion.
+13. Verify Today's Sign-ins delete still works and permits a deleted student to sign in again on that device.
 
 ## Belt model
 
 The progression uses 79 base rank states plus 10 Elite visual variants, producing 89 distinct belt images. Elite is stored separately as a boolean, while the belt image resolver uses both Rank ID and Elite status.
 
 
-## Phase 6.2 update/version behavior
+## v0.63 update/version behavior
 
-- The running build is visibly labelled **App v6.2** in the bottom-right corner and **v6.2** in the header.
-- Core CSS/JS files use `?v=6.2` URLs so an older service worker cannot silently serve the previous build after deployment.
+- The running build is visibly labelled **App v0.63** in the bottom-right corner and **v0.63** in the header.
+- Core CSS/JS files use `?v=0.63` URLs so an older service worker cannot silently serve the previous build after deployment.
 - Online navigation is network-first; offline navigation falls back to the cached app shell.
 - Service worker registration uses `updateViaCache: none`, explicitly checks for updates on online launch, and reloads once when a new worker takes control.
 - Keep your existing `config.js`; this package still contains only `config.example.js`.
 
 ### If the installed PWA is currently stuck on an older build
 
-After uploading/committing all Phase 6.2 files, open the GitHub Pages URL in a normal browser tab once with `?force=6.2` appended. The old cache should miss that navigation URL; the Phase 6.2 HTML then requests versioned CSS/JS assets. Once you see **App v6.2**, close and reopen the installed PWA.
+After uploading/committing all v0.63 files, open the GitHub Pages URL in a normal browser tab once with `?force=0.63` appended. The old cache should miss that navigation URL; the v0.63 HTML then requests versioned CSS/JS assets. Once you see **App v0.63**, close and reopen the installed PWA.
 
 
-## Phase 6.2 UI fixes
+## v0.63 UI fixes
 - Embedded belt image bundle prevents broken belt previews if nested asset files are missed during GitHub upload.
 - Student Details styling tightened and made consistent with dark theme.
 - Belt Promotions cards use dark theme, readable names, student number metadata, labeled Elite control, compact layout, and custom checkboxes.
 - Service worker install no longer depends on all 89 nested belt files being present.
+
+## v0.63 admin organization
+
+- Main hub: Manage Students, Today’s Sign-ins, Attendance Catch Up, Reporting, Admin.
+- Admin: Add Student, Belt Management, Check for Update, Open Google Sheet, Change Admin PIN, Exit to Sign-In.
+- Belt Management: Belt Promotions, Initialize Current Ranks.
+- Belt Promotions lists all active students; students with attendance on the selected exam date are checked by default and sorted first.
+- Initialize Current Ranks writes `INITIAL_SETUP` history entries and supports an optional effective date.
+
+## v0.63 icon update
+The installed PWA icon now uses a Purple Dragon-themed PD/belt badge rather than the temporary PD initials icon.

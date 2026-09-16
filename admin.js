@@ -3,6 +3,7 @@
   let beltRanks = [];
   let editingStudent = null;
   let promotionStudents = [];
+  let initializationStudents = [];
 
   const $ = id => document.getElementById(id);
 
@@ -881,6 +882,7 @@
       const pick = document.createElement('input');
       pick.type = 'checkbox';
       pick.className = 'promotion-checkbox';
+      pick.checked = Boolean(student.attended);
 
       const fields = document.createElement('div');
       fields.className = 'promotion-fields';
@@ -890,7 +892,7 @@
 
       const current = document.createElement('div');
       current.className = 'promotion-current';
-      current.textContent = `#${student.pin} · Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}`;
+      current.textContent = `#${student.pin} · Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}${student.attended ? ' · Attended exam date' : ''}`;
 
       const override = document.createElement('div');
       override.className = 'promotion-override';
@@ -933,7 +935,8 @@
     try {
       await ensureRanksLoaded();
       const result = await api('promotionCandidates', {
-        term: $('promotionSearch').value.trim()
+        term: $('promotionSearch').value.trim(),
+        examDate: $('promotionExamDate').value
       });
       promotionStudents = result.students || [];
       renderPromotionCandidates(promotionStudents);
@@ -984,6 +987,182 @@
     }
   }
 
+  async function checkForUpdate() {
+    const current = (self.PD_APP_VERSION || 'unknown').toString();
+    message('adminSettingsMessage', `Checking for updates… Current version: ${current}`);
+
+    if (!navigator.onLine) {
+      message('adminSettingsMessage', 'Cannot check for updates while offline.');
+      return;
+    }
+
+    try {
+      const versionResponse = await fetch(`./version.js?check=${Date.now()}`, { cache: 'no-store' });
+      const versionText = await versionResponse.text();
+      const match = versionText.match(/PD_APP_VERSION\s*=\s*['\"]([^'\"]+)['\"]/);
+      const remote = match ? match[1] : '';
+
+      if (!remote) throw new Error('Could not read the deployed app version.');
+
+      if (remote === current) {
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) await registration.update();
+        }
+        message('adminSettingsMessage', `App is up to date (v${current}).`);
+        return;
+      }
+
+      message('adminSettingsMessage', `Version ${remote} is available. Updating…`);
+
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+        }
+      }
+
+      // If controllerchange does not fire quickly, reload with a cache-busting
+      // navigation so the current deployment becomes visible immediately.
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('force', remote);
+        window.location.replace(url.toString());
+      }, 1600);
+    } catch (err) {
+      message('adminSettingsMessage', `Update check failed: ${err.message}`);
+    }
+  }
+
+  function renderInitializationStudents(students) {
+    const box = $('initializeRanksList');
+    box.innerHTML = '';
+
+    if (!students.length) {
+      box.textContent = 'No active students found.';
+      return;
+    }
+
+    students.forEach(student => {
+      const row = document.createElement('div');
+      row.className = 'promotion-row initialization-row';
+      row.dataset.pin = student.pin;
+      row.dataset.originalRank = student.rankId || '';
+      row.dataset.originalElite = student.elite ? '1' : '0';
+
+      const pick = document.createElement('input');
+      pick.type = 'checkbox';
+      pick.className = 'initialization-checkbox';
+
+      const fields = document.createElement('div');
+      fields.className = 'promotion-fields';
+
+      const name = document.createElement('strong');
+      name.textContent = student.name;
+
+      const current = document.createElement('div');
+      current.className = 'promotion-current';
+      current.textContent = `#${student.pin} · Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}`;
+
+      const override = document.createElement('div');
+      override.className = 'promotion-override';
+
+      const select = document.createElement('select');
+      select.className = 'initialization-rank-select';
+      populateRankSelect(select, student.rankId || '', true);
+
+      const eliteLabel = document.createElement('label');
+      eliteLabel.className = 'check-inline';
+      const elite = document.createElement('input');
+      elite.type = 'checkbox';
+      elite.className = 'initialization-elite';
+      elite.checked = Boolean(student.elite);
+      eliteLabel.append(elite, document.createTextNode(' Elite belt'));
+
+      function refreshElite() {
+        const rank = rankById(select.value);
+        elite.disabled = !rank || !rank.eliteEligible;
+        if (elite.disabled) elite.checked = false;
+      }
+
+      select.addEventListener('change', refreshElite);
+      refreshElite();
+
+      override.append(select, eliteLabel);
+      fields.append(name, current, override);
+      row.append(pick, fields);
+      box.appendChild(row);
+    });
+  }
+
+  async function openInitializeRanks() {
+    show('adminInitializeRanksScreen');
+    message('initializeRanksMessage', 'Loading active students…');
+    try {
+      await ensureRanksLoaded();
+      populateRankSelect($('initializeBulkRank'), '', false);
+      const result = await api('initializationStudents');
+      initializationStudents = result.students || [];
+      renderInitializationStudents(initializationStudents);
+      message('initializeRanksMessage', `${initializationStudents.length} active students loaded.`);
+    } catch (err) {
+      message('initializeRanksMessage', err.message);
+    }
+  }
+
+  function applyBulkInitializationRank() {
+    const target = $('initializeBulkRank').value;
+    if (!target) {
+      message('initializeRanksMessage', 'Choose a rank to assign.');
+      return;
+    }
+    let changed = 0;
+    document.querySelectorAll('.initialization-row').forEach(row => {
+      if (!row.querySelector('.initialization-checkbox').checked) return;
+      const select = row.querySelector('.initialization-rank-select');
+      select.value = target;
+      select.dispatchEvent(new Event('change'));
+      changed++;
+    });
+    message('initializeRanksMessage', changed ? `Assigned ${changed} checked student${changed === 1 ? '' : 's'} to ${beltLabelFor(target, false)}. Review, then Save All Changes.` : 'Check one or more students first.');
+  }
+
+  async function saveInitializedRanks() {
+    const assignments = [];
+    document.querySelectorAll('.initialization-row').forEach(row => {
+      const rankId = row.querySelector('.initialization-rank-select').value;
+      const elite = row.querySelector('.initialization-elite').checked;
+      const oldRank = row.dataset.originalRank || '';
+      const oldElite = row.dataset.originalElite === '1';
+      if (rankId && (rankId !== oldRank || elite !== oldElite)) {
+        assignments.push({ pin: row.dataset.pin, rankId, elite });
+      }
+    });
+
+    if (!assignments.length) {
+      message('initializeRanksMessage', 'No rank changes to save.');
+      return;
+    }
+
+    if (!confirm(`Save current ranks for ${assignments.length} student${assignments.length === 1 ? '' : 's'}?`)) return;
+
+    try {
+      message('initializeRanksMessage', 'Saving current ranks…');
+      const result = await api('initializeRanks', {
+        effectiveDate: $('initializeEffectiveDate').value,
+        assignments
+      });
+      message('initializeRanksMessage', `${result.updated} student rank${result.updated === 1 ? '' : 's'} initialized.`);
+      if (window.PDSyncNow) await window.PDSyncNow().catch(console.error);
+      await openInitializeRanks();
+    } catch (err) {
+      message('initializeRanksMessage', err.message);
+    }
+  }
+
   async function changePin() {
     const one = $('newAdminPin').value.trim();
     const two = $('confirmAdminPin').value.trim();
@@ -1024,6 +1203,7 @@
   });
 
   $('addStudentBtn').addEventListener('click', addStudent);
+  $('addStudentBackBtn').addEventListener('click', () => show('adminSettingsScreen'));
   $('manageStudentsTile').addEventListener('click', openManageStudents);
   $('manageStudentSearchBtn').addEventListener('click', searchManageStudents);
   $('manageStudentSearch').addEventListener('keydown', e => {
@@ -1033,12 +1213,20 @@
   $('editStudentElite').addEventListener('change', updateStudentBeltPreview);
   $('editStudentBackBtn').addEventListener('click', () => show('adminManageStudentsScreen'));
   $('saveStudentBtn').addEventListener('click', saveStudent);
+  $('beltManagementTile').addEventListener('click', () => show('adminBeltManagementScreen'));
+  $('beltManagementBackBtn').addEventListener('click', () => show('adminSettingsScreen'));
+  $('initializeRanksTile').addEventListener('click', openInitializeRanks);
+  $('initializeRanksBackBtn').addEventListener('click', () => show('adminBeltManagementScreen'));
+  $('applyInitializeBulkRankBtn').addEventListener('click', applyBulkInitializationRank);
+  $('saveInitializedRanksBtn').addEventListener('click', saveInitializedRanks);
+  $('checkForUpdateBtn').addEventListener('click', checkForUpdate);
   $('beltPromotionsTile').addEventListener('click', openBeltPromotions);
   $('loadPromotionCandidatesBtn').addEventListener('click', loadPromotionCandidates);
+  $('promotionExamDate').addEventListener('change', loadPromotionCandidates);
   $('promotionSearch').addEventListener('keydown', e => {
     if (e.key === 'Enter') loadPromotionCandidates();
   });
-  $('promotionBackBtn').addEventListener('click', () => show('adminHubScreen'));
+  $('promotionBackBtn').addEventListener('click', () => show('adminBeltManagementScreen'));
   $('submitPromotionsBtn').addEventListener('click', submitPromotions);
   $('deactivateSearchBtn').addEventListener('click', searchDeactivate);
   $('reactivateSearchBtn').addEventListener('click', searchReactivate);
