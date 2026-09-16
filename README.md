@@ -1,4 +1,4 @@
-# Purple Dragon Attendance PWA — Development v0.66
+# Purple Dragon Attendance PWA — Development v0.67
 
 
 ## New in development v0.63
@@ -168,7 +168,7 @@ This package updates the app icon files to use the exact uploaded Purple Dragon 
 - No Apps Script backend changes are required for v0.65.
 
 
-## v0.66 performance pass
+## v0.67 performance pass
 - Belt definitions load from the local PWA asset instead of Apps Script.
 - The app no longer refreshes the roster from Apps Script on every launch; a locally cached roster is considered fresh for 30 minutes, while member edits still force an immediate refresh.
 - Removed the duplicate 366 KB embedded belt-image JavaScript bundle; belt PNGs remain local PWA assets and are cached on use.
@@ -178,4 +178,11 @@ This package updates the app icon files to use the exact uploaded Purple Dragon 
 - Dashboard backend now returns per-student daily counts so filtering can happen locally.
 
 
-**Backend deployment required for v0.66:** replace `Code.gs` with the supplied v0.66 file, save, then update the existing Apps Script web-app deployment to a new version. Keep the existing PWA `config.js`.
+**Backend deployment required for v0.67:** replace `Code.gs` with the supplied v0.67 file, save, then update the existing Apps Script web-app deployment to a new version. Keep the existing PWA `config.js`.
+
+## v0.67 rank-data reliability fix
+- Belt/rank definitions are now embedded directly in `admin.js`.
+- Manage Students, Belt Promotions and Initialize Current Ranks no longer fetch `belts/ranks.json` at runtime.
+- This eliminates the `Could not load local belt definitions` failure caused by a missing/stale ranks JSON file or service-worker cache mismatch.
+- The service worker no longer requires `belts/ranks.json` during installation.
+- No Apps Script backend changes from v0.66 are required.
