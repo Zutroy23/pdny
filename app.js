@@ -58,8 +58,13 @@
     const beltName = $('confirmBeltName');
 
     if (student.beltImage && student.rankName) {
-      beltImage.src = `./belts/${student.beltImage}`;
-      beltImage.alt = student.rankName;
+      const embedded = window.PD_BELT_IMAGE_DATA && window.PD_BELT_IMAGE_DATA[student.beltImage];
+      beltImage.onerror = () => {
+        beltImage.removeAttribute('src');
+        beltWrap.hidden = true;
+      };
+      beltImage.src = embedded || `./belts/${student.beltImage}`;
+      beltImage.alt = '';
       beltName.textContent = student.rankName + (student.elite ? ' — Elite' : '');
       beltWrap.hidden = false;
     } else {

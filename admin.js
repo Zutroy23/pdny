@@ -723,7 +723,14 @@
 
     const file = beltImageFor(rankId, eliteBox.checked);
     if (file) {
-      $('editStudentBeltImage').src = `./belts/${file}`;
+      const image = $('editStudentBeltImage');
+      const embedded = window.PD_BELT_IMAGE_DATA && window.PD_BELT_IMAGE_DATA[file];
+      image.onerror = () => {
+        image.removeAttribute('src');
+        $('editStudentBeltPreview').hidden = true;
+      };
+      image.src = embedded || `./belts/${file}`;
+      image.alt = '';
       $('editStudentBeltName').textContent = beltLabelFor(rankId, eliteBox.checked);
       $('editStudentBeltPreview').hidden = false;
     } else {
@@ -879,11 +886,11 @@
       fields.className = 'promotion-fields';
 
       const name = document.createElement('strong');
-      name.textContent = `${student.name} (#${student.pin})`;
+      name.textContent = student.name;
 
       const current = document.createElement('div');
       current.className = 'promotion-current';
-      current.textContent = `Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}`;
+      current.textContent = `#${student.pin} · Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}`;
 
       const override = document.createElement('div');
       override.className = 'promotion-override';
@@ -897,7 +904,7 @@
       const elite = document.createElement('input');
       elite.type = 'checkbox';
       elite.className = 'promotion-elite';
-      eliteLabel.append(elite, document.createTextNode(' Elite'));
+      eliteLabel.append(elite, document.createTextNode(' Elite belt'));
 
       override.append(select, eliteLabel);
       fields.append(name, current, override);
