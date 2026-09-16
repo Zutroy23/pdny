@@ -52,6 +52,22 @@
     selectedStudent = student;
     $('confirmName').textContent = student.name;
     $('confirmPin').textContent = `Number ${student.pin}`;
+
+    const beltWrap = $('confirmBeltWrap');
+    const beltImage = $('confirmBeltImage');
+    const beltName = $('confirmBeltName');
+
+    if (student.beltImage && student.rankName) {
+      beltImage.src = `./belts/${student.beltImage}`;
+      beltImage.alt = student.rankName;
+      beltName.textContent = student.rankName + (student.elite ? ' — Elite' : '');
+      beltWrap.hidden = false;
+    } else {
+      beltImage.removeAttribute('src');
+      beltName.textContent = '';
+      beltWrap.hidden = true;
+    }
+
     showScreen('confirmScreen');
   }
 
@@ -161,7 +177,10 @@
 
         const number = document.createElement('span');
         number.className = 'result-pin';
-        number.textContent = `#${student.pin}`;
+        const rankText = student.rankName
+          ? ` · ${student.rankName}${student.elite ? ' — Elite' : ''}`
+          : '';
+        number.textContent = `#${student.pin}${rankText}`;
 
         button.append(name, number);
         button.addEventListener('click', () => {

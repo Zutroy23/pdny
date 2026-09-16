@@ -74,6 +74,12 @@ const PDDB = (() => {
           name: String(student.name),
           nameLower: String(student.name).toLowerCase(),
           active: student.active !== false,
+          baseDays: Number(student.baseDays || 0),
+          rankId: String(student.rankId || ''),
+          rankName: String(student.rankName || ''),
+          elite: student.elite === true,
+          beltImage: String(student.beltImage || ''),
+          standardNextRankId: String(student.standardNextRankId || ''),
           updatedAt: Date.now()
         });
       });
@@ -382,3 +388,7 @@ const PDDB = (() => {
     getMeta
   };
 })();
+
+
+// Phase 6: expose DB API for admin-side local corrections.
+window.PDDB = PDDB;

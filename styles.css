@@ -689,3 +689,46 @@ body.admin-mode .app-shell {
     width: 88vw;
   }
 }
+
+
+/* Phase 6: belts, student management and promotions */
+.admin-tile.orange { background: #c45100; }
+.confirm-belt,
+.belt-preview {
+  margin: 12px auto 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.belt-image { width: min(210px, 62vw); height: 112px; object-fit: contain; }
+.belt-name { font-weight: 700; text-align: center; }
+.student-editor select,
+.promotion-target-select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #bbb;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+.check-inline { display:flex !important; align-items:center; gap:9px; margin:8px 0; }
+.check-inline input { width:auto !important; transform:scale(1.25); }
+.student-editor-pin { padding:9px 12px; border-radius:10px; background:#f2eef8; margin-bottom:7px; }
+.student-result-rank { font-size:.86rem; opacity:.76; margin-top:3px; }
+.promotion-list { width:min(88vw,620px); margin:10px auto; display:flex; flex-direction:column; gap:10px; }
+.promotion-row { background:#fff; border:1px solid #ddd; border-radius:12px; padding:10px; display:grid; grid-template-columns:auto 1fr; gap:9px; align-items:start; }
+.promotion-row .promotion-fields { min-width:0; display:grid; gap:7px; }
+.promotion-current { font-size:.88rem; opacity:.78; }
+.promotion-override { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; }
+.promotion-override .check-inline { margin:0; white-space:nowrap; }
+.promotion-checkbox { margin-top:5px; transform:scale(1.25); }
+/* Nested attendance list must fit inside the padded dashboard frame. */
+.dashboard-table-wrap .dashboard-student-list { width:100%; max-width:100%; margin-left:0; margin-right:0; }
+.dashboard-student-list .admin-list-row { width:100%; max-width:100%; }
+.dashboard-student-list .admin-list-row > div:first-child { min-width:0; }
+.dashboard-student-list .admin-list-row strong { overflow-wrap:anywhere; }
+@media (max-width:560px) {
+  .promotion-list { width:92vw; }
+  .promotion-override { grid-template-columns:1fr; }
+}

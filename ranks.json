@@ -1,0 +1,555 @@
+[
+  {
+    "id": "UNOFFICIAL_WHITE",
+    "name": "Unofficial White Belt",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "WHITE"
+  },
+  {
+    "id": "WHITE",
+    "name": "White Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "YELLOW"
+  },
+  {
+    "id": "WHITE_BAR_1",
+    "name": "White Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "YELLOW"
+  },
+  {
+    "id": "WHITE_BAR_2",
+    "name": "White Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "YELLOW"
+  },
+  {
+    "id": "YELLOW",
+    "name": "Yellow Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "ORANGE"
+  },
+  {
+    "id": "YELLOW_BAR_1",
+    "name": "Yellow Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "ORANGE"
+  },
+  {
+    "id": "YELLOW_BAR_2",
+    "name": "Yellow Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "ORANGE"
+  },
+  {
+    "id": "ORANGE",
+    "name": "Orange Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "GREEN"
+  },
+  {
+    "id": "ORANGE_BAR_1",
+    "name": "Orange Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "GREEN"
+  },
+  {
+    "id": "ORANGE_BAR_2",
+    "name": "Orange Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "GREEN"
+  },
+  {
+    "id": "GREEN",
+    "name": "Green Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "BLUE"
+  },
+  {
+    "id": "GREEN_BAR_1",
+    "name": "Green Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "BLUE"
+  },
+  {
+    "id": "GREEN_BAR_2",
+    "name": "Green Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "BLUE"
+  },
+  {
+    "id": "BLUE",
+    "name": "Blue Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "PURPLE"
+  },
+  {
+    "id": "BLUE_BAR_1",
+    "name": "Blue Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "PURPLE"
+  },
+  {
+    "id": "BLUE_BAR_2",
+    "name": "Blue Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "PURPLE"
+  },
+  {
+    "id": "PURPLE",
+    "name": "Purple Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "RED"
+  },
+  {
+    "id": "PURPLE_BAR_1",
+    "name": "Purple Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "RED"
+  },
+  {
+    "id": "PURPLE_BAR_2",
+    "name": "Purple Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "RED"
+  },
+  {
+    "id": "RED",
+    "name": "Red Belt",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "BROWN_3_KYU"
+  },
+  {
+    "id": "RED_BAR_1",
+    "name": "Red Belt Bar 1",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "BROWN_3_KYU"
+  },
+  {
+    "id": "RED_BAR_2",
+    "name": "Red Belt Bar 2",
+    "category": "Underbelt",
+    "elite": false,
+    "std": "BROWN_3_KYU"
+  },
+  {
+    "id": "BROWN_3_KYU",
+    "name": "Brown Belt 3rd Kyu",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "BROWN_2_KYU"
+  },
+  {
+    "id": "BROWN_2_KYU",
+    "name": "Brown Belt 2nd Kyu",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "BROWN_1_KYU"
+  },
+  {
+    "id": "BROWN_1_KYU",
+    "name": "Brown Belt 1st Kyu",
+    "category": "Underbelt",
+    "elite": true,
+    "std": "BLACK_WHITE_STRIPE"
+  },
+  {
+    "id": "BLACK_WHITE_STRIPE",
+    "name": "Blackbelt White Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_YELLOW_STRIPE"
+  },
+  {
+    "id": "BLACK_YELLOW_STRIPE",
+    "name": "Blackbelt Yellow Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_ORANGE_STRIPE"
+  },
+  {
+    "id": "BLACK_ORANGE_STRIPE",
+    "name": "Blackbelt Orange Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_GREEN_STRIPE"
+  },
+  {
+    "id": "BLACK_GREEN_STRIPE",
+    "name": "Blackbelt Green Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_BLUE_STRIPE"
+  },
+  {
+    "id": "BLACK_BLUE_STRIPE",
+    "name": "Blackbelt Blue Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_PURPLE_STRIPE"
+  },
+  {
+    "id": "BLACK_PURPLE_STRIPE",
+    "name": "Blackbelt Purple Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_BROWN_STRIPE"
+  },
+  {
+    "id": "BLACK_BROWN_STRIPE",
+    "name": "Blackbelt Brown Stripe",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK"
+  },
+  {
+    "id": "JET_BLACK",
+    "name": "Jet Blackbelt",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_RED_STAR_1"
+  },
+  {
+    "id": "JET_BLACK_RED_STAR_1",
+    "name": "Jet Black Belt (Red Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_RED_STAR_2"
+  },
+  {
+    "id": "JET_BLACK_RED_STAR_2",
+    "name": "Jet Black Belt (2 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_RED_STAR_3"
+  },
+  {
+    "id": "JET_BLACK_RED_STAR_3",
+    "name": "Jet Black Belt (3 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_GOLD_STAR_1"
+  },
+  {
+    "id": "JET_BLACK_GOLD_STAR_1",
+    "name": "Jet Black Belt (Gold Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_GOLD_STAR_2"
+  },
+  {
+    "id": "JET_BLACK_GOLD_STAR_2",
+    "name": "Jet Black Belt (2 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_GOLD_STAR_3"
+  },
+  {
+    "id": "JET_BLACK_GOLD_STAR_3",
+    "name": "Jet Black Belt (3 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_PURPLE_STAR_1"
+  },
+  {
+    "id": "JET_BLACK_PURPLE_STAR_1",
+    "name": "Jet Black Belt (Purple Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_PURPLE_STAR_2"
+  },
+  {
+    "id": "JET_BLACK_PURPLE_STAR_2",
+    "name": "Jet Black Belt (2 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "JET_BLACK_PURPLE_STAR_3"
+  },
+  {
+    "id": "JET_BLACK_PURPLE_STAR_3",
+    "name": "Jet Black Belt (3 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE"
+  },
+  {
+    "id": "BLACK_2_DEGREE",
+    "name": "2nd Black Belt Degree",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_RED_STAR_1"
+  },
+  {
+    "id": "BLACK_2_DEGREE_RED_STAR_1",
+    "name": "2nd Black Belt Degree (Red Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_RED_STAR_2"
+  },
+  {
+    "id": "BLACK_2_DEGREE_RED_STAR_2",
+    "name": "2nd Black Belt Degree (2 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_RED_STAR_3"
+  },
+  {
+    "id": "BLACK_2_DEGREE_RED_STAR_3",
+    "name": "2nd Black Belt Degree (3 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_GOLD_STAR_1"
+  },
+  {
+    "id": "BLACK_2_DEGREE_GOLD_STAR_1",
+    "name": "2nd Black Belt Degree (Gold Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_GOLD_STAR_2"
+  },
+  {
+    "id": "BLACK_2_DEGREE_GOLD_STAR_2",
+    "name": "2nd Black Belt Degree (2 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_GOLD_STAR_3"
+  },
+  {
+    "id": "BLACK_2_DEGREE_GOLD_STAR_3",
+    "name": "2nd Black Belt Degree (3 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_PURPLE_STAR_1"
+  },
+  {
+    "id": "BLACK_2_DEGREE_PURPLE_STAR_1",
+    "name": "2nd Black Belt Degree (Purple Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_PURPLE_STAR_2"
+  },
+  {
+    "id": "BLACK_2_DEGREE_PURPLE_STAR_2",
+    "name": "2nd Black Belt Degree (2 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_2_DEGREE_PURPLE_STAR_3"
+  },
+  {
+    "id": "BLACK_2_DEGREE_PURPLE_STAR_3",
+    "name": "2nd Black Belt Degree (3 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI"
+  },
+  {
+    "id": "BLACK_3_SENPAI",
+    "name": "3rd Black Belt Degree Rank of Senpai",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_RED_STAR_1"
+  },
+  {
+    "id": "BLACK_3_SENPAI_RED_STAR_1",
+    "name": "3rd Black Belt Degree Rank of Senpai (Red Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_RED_STAR_2"
+  },
+  {
+    "id": "BLACK_3_SENPAI_RED_STAR_2",
+    "name": "3rd Black Belt Degree Rank of Senpai (2 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_RED_STAR_3"
+  },
+  {
+    "id": "BLACK_3_SENPAI_RED_STAR_3",
+    "name": "3rd Black Belt Degree Rank of Senpai (3 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_GOLD_STAR_1"
+  },
+  {
+    "id": "BLACK_3_SENPAI_GOLD_STAR_1",
+    "name": "3rd Black Belt Degree Rank of Senpai (Gold Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_GOLD_STAR_2"
+  },
+  {
+    "id": "BLACK_3_SENPAI_GOLD_STAR_2",
+    "name": "3rd Black Belt Degree Rank of Senpai (2 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_GOLD_STAR_3"
+  },
+  {
+    "id": "BLACK_3_SENPAI_GOLD_STAR_3",
+    "name": "3rd Black Belt Degree Rank of Senpai (3 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_PURPLE_STAR_1"
+  },
+  {
+    "id": "BLACK_3_SENPAI_PURPLE_STAR_1",
+    "name": "3rd Black Belt Degree Rank of Senpai (Purple Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_PURPLE_STAR_2"
+  },
+  {
+    "id": "BLACK_3_SENPAI_PURPLE_STAR_2",
+    "name": "3rd Black Belt Degree Rank of Senpai (2 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_3_SENPAI_PURPLE_STAR_3"
+  },
+  {
+    "id": "BLACK_3_SENPAI_PURPLE_STAR_3",
+    "name": "3rd Black Belt Degree Rank of Senpai (3 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI"
+  },
+  {
+    "id": "BLACK_4_SENSEI",
+    "name": "4th Black Belt Degree Rank of Sensei",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_RED_STAR_1"
+  },
+  {
+    "id": "BLACK_4_SENSEI_RED_STAR_1",
+    "name": "4th Black Belt Degree Rank of Sensei (Red Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_RED_STAR_2"
+  },
+  {
+    "id": "BLACK_4_SENSEI_RED_STAR_2",
+    "name": "4th Black Belt Degree Rank of Sensei (2 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_RED_STAR_3"
+  },
+  {
+    "id": "BLACK_4_SENSEI_RED_STAR_3",
+    "name": "4th Black Belt Degree Rank of Sensei (3 Red Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_GOLD_STAR_1"
+  },
+  {
+    "id": "BLACK_4_SENSEI_GOLD_STAR_1",
+    "name": "4th Black Belt Degree Rank of Sensei (Gold Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_GOLD_STAR_2"
+  },
+  {
+    "id": "BLACK_4_SENSEI_GOLD_STAR_2",
+    "name": "4th Black Belt Degree Rank of Sensei (2 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_GOLD_STAR_3"
+  },
+  {
+    "id": "BLACK_4_SENSEI_GOLD_STAR_3",
+    "name": "4th Black Belt Degree Rank of Sensei (3 Gold Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_PURPLE_STAR_1"
+  },
+  {
+    "id": "BLACK_4_SENSEI_PURPLE_STAR_1",
+    "name": "4th Black Belt Degree Rank of Sensei (Purple Star)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_PURPLE_STAR_2"
+  },
+  {
+    "id": "BLACK_4_SENSEI_PURPLE_STAR_2",
+    "name": "4th Black Belt Degree Rank of Sensei (2 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_SENSEI_PURPLE_STAR_3"
+  },
+  {
+    "id": "BLACK_4_SENSEI_PURPLE_STAR_3",
+    "name": "4th Black Belt Degree Rank of Sensei (3 Purple Stars)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_4_RENSHI"
+  },
+  {
+    "id": "BLACK_4_RENSHI",
+    "name": "4th Degree Blackbelt (Rank of Sensei) Renshi Belt",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_5_SENSEI"
+  },
+  {
+    "id": "BLACK_5_SENSEI",
+    "name": "5th Degree Blackbelt (Rank of Sensei)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_6_SHIHAN"
+  },
+  {
+    "id": "BLACK_6_SHIHAN",
+    "name": "6th Degree Blackbelt (Rank of Shihan)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_7_SHIHAN"
+  },
+  {
+    "id": "BLACK_7_SHIHAN",
+    "name": "7th Degree Blackbelt (Rank of Shihan)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_8_SHIHAN"
+  },
+  {
+    "id": "BLACK_8_SHIHAN",
+    "name": "8th Degree Blackbelt (Rank of Shihan)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_9_PROFESSOR"
+  },
+  {
+    "id": "BLACK_9_PROFESSOR",
+    "name": "9th Degree Blackbelt (Rank of Professor)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": "BLACK_10_GRANDMASTER"
+  },
+  {
+    "id": "BLACK_10_GRANDMASTER",
+    "name": "10th Degree Blackbelt (Rank of Grandmaster)",
+    "category": "Blackbelt",
+    "elite": false,
+    "std": ""
+  }
+]

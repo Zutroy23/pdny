@@ -1,5 +1,8 @@
 (() => {
   let adminPin = '';
+  let beltRanks = [];
+  let editingStudent = null;
+  let promotionStudents = [];
 
   const $ = id => document.getElementById(id);
 
@@ -659,12 +662,318 @@
     }
   }
 
-  async function refreshCache() {
+
+  function rankById(rankId) {
+    return beltRanks.find(rank => rank.id === rankId) || null;
+  }
+
+  function beltImageFor(rankId, elite) {
+    const rank = rankById(rankId);
+    if (!rank) return '';
+    if (elite && rank.eliteEligible && rank.eliteImage) return rank.eliteImage;
+    return rank.image || '';
+  }
+
+  function beltLabelFor(rankId, elite) {
+    const rank = rankById(rankId);
+    if (!rank) return 'Rank not set';
+    return rank.name + (elite ? ' — Elite' : '');
+  }
+
+  async function ensureRanksLoaded() {
+    if (beltRanks.length) return beltRanks;
+    const result = await api('beltDefinitions');
+    beltRanks = Array.isArray(result.ranks) ? result.ranks : [];
+    return beltRanks;
+  }
+
+  function populateRankSelect(select, selectedId, allowBlank = true) {
+    select.innerHTML = '';
+
+    if (allowBlank) {
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '— Rank not set —';
+      select.appendChild(blank);
+    }
+
+    beltRanks.forEach(rank => {
+      const option = document.createElement('option');
+      option.value = rank.id;
+      option.textContent = rank.name;
+      if (rank.id === selectedId) option.selected = true;
+      select.appendChild(option);
+    });
+  }
+
+  function updateStudentBeltPreview() {
+    const rankId = $('editStudentRank').value;
+    const rank = rankById(rankId);
+    const eliteBox = $('editStudentElite');
+
+    if (!rank) {
+      eliteBox.checked = false;
+      eliteBox.disabled = true;
+      $('editStudentBeltPreview').hidden = true;
+      return;
+    }
+
+    eliteBox.disabled = !rank.eliteEligible;
+    if (!rank.eliteEligible) eliteBox.checked = false;
+
+    const file = beltImageFor(rankId, eliteBox.checked);
+    if (file) {
+      $('editStudentBeltImage').src = `./belts/${file}`;
+      $('editStudentBeltName').textContent = beltLabelFor(rankId, eliteBox.checked);
+      $('editStudentBeltPreview').hidden = false;
+    } else {
+      $('editStudentBeltPreview').hidden = true;
+    }
+  }
+
+  async function openManageStudents() {
+    show('adminManageStudentsScreen');
+    message('manageStudentMessage', '');
+    $('manageStudentResults').innerHTML = '';
     try {
-      const result = await api('refreshCache');
-      message('adminSettingsMessage', result.message || 'Cache refreshed.');
+      await ensureRanksLoaded();
+      await searchManageStudents();
     } catch (err) {
-      message('adminSettingsMessage', err.message);
+      message('manageStudentMessage', err.message);
+    }
+  }
+
+  async function searchManageStudents() {
+    message('manageStudentMessage', 'Loading…');
+    $('manageStudentResults').innerHTML = '';
+
+    try {
+      await ensureRanksLoaded();
+      const result = await api('searchStudents', {
+        term: $('manageStudentSearch').value.trim()
+      });
+      message('manageStudentMessage', result.matches.length ? '' : 'No matching students.');
+
+      result.matches.forEach(student => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'search-result student-manage-result';
+
+        const left = document.createElement('span');
+        const name = document.createElement('strong');
+        name.textContent = student.name;
+        const meta = document.createElement('span');
+        meta.className = 'student-result-rank';
+        meta.textContent = `#${student.pin} · ${student.rankName || 'Rank not set'}${student.elite ? ' · Elite' : ''} · ${student.active ? 'Active' : 'Inactive'} · Base ${student.baseDays}`;
+        left.append(name, meta);
+
+        row.appendChild(left);
+        row.addEventListener('click', () => openStudentEditor(student.pin));
+        $('manageStudentResults').appendChild(row);
+      });
+    } catch (err) {
+      message('manageStudentMessage', err.message);
+    }
+  }
+
+  async function openStudentEditor(pin) {
+    try {
+      await ensureRanksLoaded();
+      const result = await api('getStudent', { pin });
+      editingStudent = result.student;
+
+      $('editStudentPin').textContent = editingStudent.pin;
+      $('editStudentName').value = editingStudent.name;
+      $('editStudentBaseDays').value = editingStudent.baseDays ?? 0;
+      $('editStudentActive').checked = editingStudent.active !== false;
+      populateRankSelect($('editStudentRank'), editingStudent.rankId || '', true);
+      $('editStudentElite').checked = Boolean(editingStudent.elite);
+      updateStudentBeltPreview();
+      message('editStudentMessage', '');
+      show('adminStudentEditScreen');
+    } catch (err) {
+      message('manageStudentMessage', err.message);
+    }
+  }
+
+  async function saveStudent() {
+    if (!editingStudent) return;
+
+    const rankId = $('editStudentRank').value;
+    const rank = rankById(rankId);
+    const next = {
+      pin: editingStudent.pin,
+      name: $('editStudentName').value.trim(),
+      baseDays: Number($('editStudentBaseDays').value || 0),
+      active: $('editStudentActive').checked,
+      rankId,
+      elite: Boolean(rank && rank.eliteEligible && $('editStudentElite').checked)
+    };
+
+    if (!next.name) {
+      message('editStudentMessage', 'Name cannot be blank.');
+      return;
+    }
+    if (!Number.isFinite(next.baseDays) || next.baseDays < 0 || !Number.isInteger(next.baseDays)) {
+      message('editStudentMessage', 'Base days must be a whole number of 0 or greater.');
+      return;
+    }
+
+    const changes = [];
+    if (next.name !== editingStudent.name) changes.push(`Name: ${editingStudent.name} → ${next.name}`);
+    if (next.baseDays !== Number(editingStudent.baseDays || 0)) changes.push(`Base days: ${editingStudent.baseDays || 0} → ${next.baseDays}`);
+    if (next.active !== Boolean(editingStudent.active)) changes.push(`Active: ${editingStudent.active ? 'Yes' : 'No'} → ${next.active ? 'Yes' : 'No'}`);
+    if (next.rankId !== (editingStudent.rankId || '') || next.elite !== Boolean(editingStudent.elite)) {
+      changes.push(`Rank: ${beltLabelFor(editingStudent.rankId, editingStudent.elite)} → ${beltLabelFor(next.rankId, next.elite)}`);
+    }
+
+    if (!changes.length) {
+      message('editStudentMessage', 'No changes to save.');
+      return;
+    }
+
+    if (!confirm(`Save these changes?\n\n${changes.join('\n')}`)) return;
+
+    try {
+      const result = await api('updateStudent', next);
+      editingStudent = result.student;
+      message('editStudentMessage', 'Changes saved.');
+      if (window.PDSyncNow) await window.PDSyncNow().catch(console.error);
+      setTimeout(() => searchManageStudents().catch(console.error), 150);
+    } catch (err) {
+      message('editStudentMessage', err.message);
+    }
+  }
+
+  function promotionTargetOptions(select, selectedId) {
+    populateRankSelect(select, selectedId, true);
+  }
+
+  function updatePromotionEliteState(row, student) {
+    const select = row.querySelector('.promotion-target-select');
+    const elite = row.querySelector('.promotion-elite');
+    const rank = rankById(select.value);
+    elite.disabled = !rank || !rank.eliteEligible;
+    if (elite.disabled) elite.checked = false;
+  }
+
+  function renderPromotionCandidates(students) {
+    const box = $('promotionCandidates');
+    box.innerHTML = '';
+
+    if (!students.length) {
+      box.textContent = 'No matching active students.';
+      return;
+    }
+
+    students.forEach(student => {
+      const row = document.createElement('div');
+      row.className = 'promotion-row';
+      row.dataset.pin = student.pin;
+
+      const pick = document.createElement('input');
+      pick.type = 'checkbox';
+      pick.className = 'promotion-checkbox';
+
+      const fields = document.createElement('div');
+      fields.className = 'promotion-fields';
+
+      const name = document.createElement('strong');
+      name.textContent = `${student.name} (#${student.pin})`;
+
+      const current = document.createElement('div');
+      current.className = 'promotion-current';
+      current.textContent = `Current: ${student.rankName || 'Rank not set'}${student.elite ? ' — Elite' : ''}`;
+
+      const override = document.createElement('div');
+      override.className = 'promotion-override';
+
+      const select = document.createElement('select');
+      select.className = 'promotion-target-select';
+      promotionTargetOptions(select, student.standardNextRankId || '');
+
+      const eliteLabel = document.createElement('label');
+      eliteLabel.className = 'check-inline';
+      const elite = document.createElement('input');
+      elite.type = 'checkbox';
+      elite.className = 'promotion-elite';
+      eliteLabel.append(elite, document.createTextNode(' Elite'));
+
+      override.append(select, eliteLabel);
+      fields.append(name, current, override);
+      row.append(pick, fields);
+      box.appendChild(row);
+
+      select.addEventListener('change', () => updatePromotionEliteState(row, student));
+      updatePromotionEliteState(row, student);
+    });
+  }
+
+  async function openBeltPromotions() {
+    show('adminBeltPromotionsScreen');
+    $('promotionExamDate').value = todayKey();
+    message('promotionMessage', '');
+    try {
+      await ensureRanksLoaded();
+      await loadPromotionCandidates();
+    } catch (err) {
+      message('promotionMessage', err.message);
+    }
+  }
+
+  async function loadPromotionCandidates() {
+    message('promotionMessage', 'Loading…');
+    try {
+      await ensureRanksLoaded();
+      const result = await api('promotionCandidates', {
+        term: $('promotionSearch').value.trim()
+      });
+      promotionStudents = result.students || [];
+      renderPromotionCandidates(promotionStudents);
+      message('promotionMessage', '');
+    } catch (err) {
+      $('promotionCandidates').innerHTML = '';
+      message('promotionMessage', err.message);
+    }
+  }
+
+  async function submitPromotions() {
+    const examDate = $('promotionExamDate').value;
+    const promotions = [];
+
+    document.querySelectorAll('.promotion-row').forEach(row => {
+      const checked = row.querySelector('.promotion-checkbox').checked;
+      if (!checked) return;
+      promotions.push({
+        pin: row.dataset.pin,
+        toRankId: row.querySelector('.promotion-target-select').value,
+        toElite: row.querySelector('.promotion-elite').checked
+      });
+    });
+
+    if (!examDate) {
+      message('promotionMessage', 'Choose the exam date.');
+      return;
+    }
+    if (!promotions.length) {
+      message('promotionMessage', 'Select at least one student.');
+      return;
+    }
+    if (promotions.some(item => !item.toRankId)) {
+      message('promotionMessage', 'Every selected student must have a target rank.');
+      return;
+    }
+
+    if (!confirm(`Apply ${promotions.length} belt promotion${promotions.length === 1 ? '' : 's'} for ${examDate}?`)) return;
+
+    try {
+      message('promotionMessage', 'Saving promotions…');
+      const result = await api('applyPromotions', { examDate, promotions });
+      message('promotionMessage', `${result.updated} promotion${result.updated === 1 ? '' : 's'} saved.`);
+      if (window.PDSyncNow) await window.PDSyncNow().catch(console.error);
+      await loadPromotionCandidates();
+    } catch (err) {
+      message('promotionMessage', err.message);
     }
   }
 
@@ -708,6 +1017,22 @@
   });
 
   $('addStudentBtn').addEventListener('click', addStudent);
+  $('manageStudentsTile').addEventListener('click', openManageStudents);
+  $('manageStudentSearchBtn').addEventListener('click', searchManageStudents);
+  $('manageStudentSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchManageStudents();
+  });
+  $('editStudentRank').addEventListener('change', updateStudentBeltPreview);
+  $('editStudentElite').addEventListener('change', updateStudentBeltPreview);
+  $('editStudentBackBtn').addEventListener('click', () => show('adminManageStudentsScreen'));
+  $('saveStudentBtn').addEventListener('click', saveStudent);
+  $('beltPromotionsTile').addEventListener('click', openBeltPromotions);
+  $('loadPromotionCandidatesBtn').addEventListener('click', loadPromotionCandidates);
+  $('promotionSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadPromotionCandidates();
+  });
+  $('promotionBackBtn').addEventListener('click', () => show('adminHubScreen'));
+  $('submitPromotionsBtn').addEventListener('click', submitPromotions);
   $('deactivateSearchBtn').addEventListener('click', searchDeactivate);
   $('reactivateSearchBtn').addEventListener('click', searchReactivate);
   $('openReactivateBtn').addEventListener('click', () => show('adminReactivateScreen'));
@@ -747,7 +1072,6 @@
   $('downloadCsvBtn').addEventListener('click', downloadCsv);
 
   $('openSheetBtn').addEventListener('click', openSheet);
-  $('refreshCacheBtn').addEventListener('click', refreshCache);
   $('changePinNavBtn').addEventListener('click', () => {
     message('changePinMessage', '');
     show('adminChangePinScreen');

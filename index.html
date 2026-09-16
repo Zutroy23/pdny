@@ -61,6 +61,10 @@
       <div class="subtle">Is this you?</div>
       <div id="confirmName" class="student-name"></div>
       <div id="confirmPin" class="subtle"></div>
+      <div id="confirmBeltWrap" class="confirm-belt" hidden>
+        <img id="confirmBeltImage" class="belt-image" alt="Student belt">
+        <div id="confirmBeltName" class="belt-name"></div>
+      </div>
       <div class="actions">
         <button id="cancelConfirmBtn" class="secondary large">No</button>
         <button id="confirmBtn" class="primary large">Yes, Sign In</button>
@@ -153,7 +157,8 @@
       <h1>Manage Members</h1>
       <div class="admin-tile-grid">
         <button class="admin-tile green" data-admin-nav="adminAddScreen"><span class="tile-icon">＋</span><span>Add Student</span></button>
-        <button class="admin-tile red" data-admin-nav="adminDeactivateScreen"><span class="tile-icon">−</span><span>Deactivate Student</span></button>
+        <button class="admin-tile red" id="manageStudentsTile"><span class="tile-icon">✎</span><span>Manage Students</span></button>
+        <button class="admin-tile orange" id="beltPromotionsTile"><span class="tile-icon">🥋</span><span>Belt Promotions</span></button>
         <button class="admin-tile teal" id="todaySigninsTile"><span class="tile-icon">✓</span><span>Today's Sign-ins</span></button>
         <button class="admin-tile gold" data-admin-nav="adminCatchupScreen"><span class="tile-icon">↺</span><span>Attendance Catch Up</span></button>
         <button class="admin-tile purple" data-admin-nav="adminReportingScreen"><span class="tile-icon">▥</span><span>Reporting</span></button>
@@ -172,6 +177,65 @@
           <button class="secondary admin-hub-back">Back</button>
           <button id="addStudentBtn" class="primary">Add Student</button>
         </div>
+      </div>
+    </section>
+
+    <section id="adminManageStudentsScreen" class="screen admin-screen">
+      <h1>Manage Students</h1>
+      <div class="form-card">
+        <label for="manageStudentSearch">Search students</label>
+        <div class="inline-search">
+          <input id="manageStudentSearch" type="text" autocomplete="off" placeholder="Name or number">
+          <button id="manageStudentSearchBtn" class="primary">Find</button>
+        </div>
+        <div class="subtle centered">Leave search blank to show the first 100 students.</div>
+        <div id="manageStudentMessage" class="message compact-message"></div>
+        <div id="manageStudentResults" class="search-results"></div>
+      </div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminStudentEditScreen" class="screen admin-screen">
+      <h1>Student Details</h1>
+      <div class="form-card student-editor">
+        <div class="student-editor-pin">Student Number <strong id="editStudentPin"></strong></div>
+        <label for="editStudentName">Name</label>
+        <input id="editStudentName" type="text" autocomplete="off">
+        <label for="editStudentRank">Rank</label>
+        <select id="editStudentRank"></select>
+        <label class="check-inline"><input id="editStudentElite" type="checkbox"> Elite belt</label>
+        <label for="editStudentBaseDays">Base days</label>
+        <input id="editStudentBaseDays" type="number" min="0" step="1">
+        <label class="check-inline"><input id="editStudentActive" type="checkbox"> Active student</label>
+        <div id="editStudentBeltPreview" class="belt-preview" hidden>
+          <img id="editStudentBeltImage" class="belt-image" alt="Selected belt">
+          <div id="editStudentBeltName" class="belt-name"></div>
+        </div>
+        <div id="editStudentMessage" class="message compact-message"></div>
+        <div class="actions">
+          <button id="editStudentBackBtn" class="secondary">Back</button>
+          <button id="saveStudentBtn" class="primary">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminBeltPromotionsScreen" class="screen admin-screen">
+      <h1>Belt Promotions</h1>
+      <div class="form-card promotion-controls">
+        <label for="promotionExamDate">Exam date</label>
+        <input id="promotionExamDate" type="date">
+        <label for="promotionSearch">Find students</label>
+        <div class="inline-search">
+          <input id="promotionSearch" type="text" autocomplete="off" placeholder="Name or number (blank = all active)">
+          <button id="loadPromotionCandidatesBtn" class="primary">Load</button>
+        </div>
+        <div class="subtle centered">Normal pass defaults to the next full belt/rank. Change the target rank or Elite checkbox for exceptions.</div>
+        <div id="promotionMessage" class="message compact-message"></div>
+      </div>
+      <div id="promotionCandidates" class="promotion-list"></div>
+      <div class="actions wrap">
+        <button id="promotionBackBtn" class="secondary">Back</button>
+        <button id="submitPromotionsBtn" class="primary">Apply Selected Promotions</button>
       </div>
     </section>
 
@@ -294,7 +358,6 @@
       <div class="admin-submenu-grid">
         <button id="openSheetBtn" class="admin-tile teal"><span class="tile-icon">▦</span><span>Open Google Sheet</span></button>
         <button id="changePinNavBtn" class="admin-tile blue"><span class="tile-icon">⌨</span><span>Change Admin PIN</span></button>
-        <button id="refreshCacheBtn" class="admin-tile purple"><span class="tile-icon">⚡</span><span>Refresh App Cache</span></button>
         <button class="admin-tile red admin-back-home"><span class="tile-icon">↪</span><span>Exit to Sign-In</span></button>
       </div>
       <div id="adminSettingsMessage" class="message compact-message"></div>
