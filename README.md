@@ -1,4 +1,4 @@
-# Purple Dragon Attendance PWA — Development v0.63
+# Purple Dragon Attendance PWA — Development v0.64
 
 
 ## New in development v0.63
@@ -139,3 +139,22 @@ After uploading/committing all v0.63 files, open the GitHub Pages URL in a norma
 
 ## v0.63 icon update
 The installed PWA icon now uses a Purple Dragon-themed PD/belt badge rather than the temporary PD initials icon.
+
+## v0.63 official-logo icon trial
+This package uses the official Purple Dragon crest itself as the installed app icon (cropped to the crest, without the lower AT letters) so you can test how the real logo reads on-device.
+
+## New in development v0.64 — responsive layout audit
+- Audited all 23 app/admin screens for narrow phones, short portrait screens, landscape phones, and tablets.
+- Removed viewport-width sizing that could make nested cards wider than their containers.
+- Added narrow-screen stacking rules for search controls, date ranges, action buttons, and admin tiles.
+- Added short-screen and landscape-specific layouts so controls do not overlap or become excessively tall.
+- Added safe-area-aware top/bottom/side padding and extra bottom clearance for the fixed version badge.
+- The manifest now allows both portrait and landscape orientation.
+- Main and admin screens are allowed to scroll naturally when content is taller than the device rather than squeezing/overlapping.
+- The launch/install icon now uses separate normal and maskable crest assets. The maskable version has a larger safe margin so the top of the Purple Dragon crest is not clipped on Android launch/splash screens.
+- Visible build number is **v0.64**.
+
+No Apps Script backend changes are required for v0.64. Keep your existing `config.js`.
+
+## v0.64 logo icon patch
+This package updates the app icon files to use the exact uploaded Purple Dragon crest/logo on a white background. The maskable icons use extra padding so the top of the crest should no longer be clipped on app launch or on Android home-screen masking.

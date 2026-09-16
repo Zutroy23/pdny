@@ -1,19 +1,21 @@
-importScripts('./version.js?v=0.63');
+importScripts('./version.js?v=0.64');
 const CACHE_NAME = `purple-dragon-pwa-v${self.PD_APP_VERSION}`;
 
 const APP_SHELL = [
   './',
-  './index.html?v=0.63',
-  './styles.css?v=0.63',
+  './index.html?v=0.64',
+  './styles.css?v=0.64',
   './config.js',
-  './version.js?v=0.63',
-  './db.js?v=0.63',
-  './belt-images.js?v=0.63',
-  './app.js?v=0.63',
-  './admin.js?v=0.63',
+  './version.js?v=0.64',
+  './db.js?v=0.64',
+  './belt-images.js?v=0.64',
+  './app.js?v=0.64',
+  './admin.js?v=0.64',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
 ];
 
 const CREST_FILE = 'official_crest_good_copy.png';
@@ -89,7 +91,7 @@ self.addEventListener('fetch', event => {
         .catch(async () => {
           const exact = await caches.match(request);
           if (exact) return exact;
-          return caches.match('./index.html?v=0.63');
+          return caches.match('./index.html?v=0.64');
         })
     );
     return;

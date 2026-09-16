@@ -905,3 +905,445 @@ body.admin-mode .app-shell {
 }
 .initialization-rank-select option,
 #initializeBulkRank option { color: #fff; background: #170a28; }
+
+/* v0.64 responsive layout audit
+   Goals: no horizontal overflow, safe-area-aware spacing, usable portrait/landscape
+   layouts on small phones, and comfortable scaling on tablets. */
+
+html {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  width: min(100%, 760px);
+  min-width: 0;
+  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  overflow-x: clip;
+}
+
+.statusbar,
+.screen,
+.screen > *,
+.panel,
+.form-card,
+.admin-tile-grid,
+.admin-submenu-grid,
+.admin-list,
+.check-list,
+.metric-grid,
+.promotion-list,
+.initialization-controls,
+.initialization-list,
+.dashboard-chart-wrap,
+.dashboard-table-wrap,
+.dashboard-shortcuts,
+.selected-filter,
+.recent-list {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.statusbar {
+  width: 100%;
+  padding: 4px 0;
+}
+
+.statusbar > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.status-right {
+  flex: 0 0 auto;
+}
+
+.screen {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100dvh - 78px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 16px 0 calc(42px + env(safe-area-inset-bottom));
+  overflow-x: clip;
+}
+
+body.admin-mode .screen {
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Never let the crest itself get clipped in a short viewport. */
+.crest,
+.crest-small {
+  flex: 0 0 auto;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  max-width: min(82vw, 300px);
+  max-height: 92px;
+}
+
+#pinScreen .crest {
+  margin-top: 6px;
+}
+
+h1,
+.student-name,
+.belt-name,
+.subtle,
+.message {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.keypad,
+.pill-row,
+.panel,
+.form-card,
+.recent-list,
+.admin-tile-grid,
+.admin-submenu-grid,
+.admin-list,
+.check-list,
+.metric-grid,
+.promotion-list,
+.initialization-controls,
+.initialization-list,
+.dashboard-chart-wrap,
+.dashboard-table-wrap,
+.dashboard-shortcuts,
+.selected-filter {
+  width: min(100%, 620px);
+}
+
+.keypad,
+.pill-row { width: min(100%, 460px); }
+
+.admin-screen .form-card,
+.admin-screen .admin-list,
+.admin-screen .check-list,
+.admin-screen .metric-grid,
+.admin-screen .dashboard-chart-wrap,
+.admin-screen .dashboard-table-wrap,
+.admin-screen .dashboard-shortcuts,
+.admin-screen .selected-filter,
+.promotion-list,
+.initialization-controls,
+.initialization-list {
+  width: min(100%, 620px);
+}
+
+#adminHubScreen .admin-tile-grid {
+  width: min(100%, 450px);
+}
+
+.inline-search,
+.date-pair,
+.promotion-override,
+.actions,
+.today-entry-actions,
+.selected-filter {
+  min-width: 0;
+}
+
+.inline-search > *,
+.date-pair > *,
+.promotion-override > *,
+.actions > * {
+  min-width: 0;
+}
+
+.inline-search input,
+.inline-search select {
+  min-width: 0;
+  width: 100%;
+}
+
+.actions {
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  max-width: 100%;
+}
+
+.admin-list-row,
+.check-row,
+.recent-row,
+.search-result {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-list-row > div,
+.recent-row > div,
+.search-result > div,
+.check-row > span,
+.today-entry-actions {
+  min-width: 0;
+}
+
+.admin-list-row strong,
+.recent-row strong,
+.search-result strong {
+  overflow-wrap: anywhere;
+}
+
+.form-card input,
+.form-card textarea,
+.form-card select,
+.student-editor select,
+.promotion-target-select,
+.initialization-rank-select,
+#initializeBulkRank {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The fixed version badge must not cover the final action row. */
+.app-version {
+  bottom: max(7px, env(safe-area-inset-bottom));
+}
+
+/* Small phones in portrait (iPhone SE-class and narrow Android phones). */
+@media (max-width: 430px) {
+  .app-shell {
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-left: max(10px, env(safe-area-inset-left));
+  }
+
+  .statusbar {
+    gap: 7px;
+    min-height: 56px;
+    font-size: 13px;
+  }
+
+  .statusbar .subtle { font-size: 12px; }
+  .badge { font-size: 10px; padding: 3px 6px; }
+
+  .screen {
+    padding-top: 10px;
+    padding-bottom: calc(42px + env(safe-area-inset-bottom));
+  }
+
+  h1 {
+    margin: 6px 0 10px;
+    font-size: clamp(21px, 7vw, 28px);
+    line-height: 1.12;
+  }
+
+  .crest { height: clamp(50px, 10dvh, 72px); max-width: 72vw; }
+  .crest-small { height: clamp(44px, 8dvh, 62px); max-width: 68vw; }
+
+  .student-name {
+    margin: 7px 0;
+    font-size: clamp(24px, 8vw, 34px);
+    line-height: 1.08;
+  }
+
+  .panel,
+  .form-card,
+  .dashboard-chart-wrap,
+  .dashboard-table-wrap {
+    padding: 12px;
+  }
+
+  .admin-tile-grid,
+  .admin-submenu-grid {
+    gap: 8px;
+  }
+
+  .admin-tile {
+    aspect-ratio: auto;
+    min-height: 92px;
+    padding: 9px 6px;
+    font-size: 14px;
+    line-height: 1.12;
+  }
+
+  .tile-icon { font-size: 25px; }
+
+  #adminHubScreen .admin-tile {
+    aspect-ratio: auto;
+    min-height: 86px;
+  }
+
+  .admin-list-row,
+  .check-row,
+  .recent-row {
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .today-entry-actions { gap: 5px; }
+  .today-delete,
+  .result-action { padding: 7px 8px; font-size: 12px; }
+
+  .metric-card { padding: 9px 6px; }
+  .metric-card strong { font-size: 20px; }
+
+  .promotion-row {
+    padding: 9px;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .promotion-fields > strong { font-size: .95rem; }
+  .promotion-target-select { min-height: 44px; }
+
+  .student-editor .belt-image,
+  .confirm-belt .belt-image {
+    width: min(165px, 56vw);
+    height: 68px;
+    max-height: 68px;
+  }
+
+  .actions { margin-top: 12px; gap: 8px; }
+  button.large { min-width: 120px; min-height: 50px; font-size: 16px; }
+}
+
+/* Very narrow phones: stack controls that otherwise compete for width. */
+@media (max-width: 350px) {
+  .pill-row { grid-template-columns: 1fr; }
+
+  .inline-search {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .inline-search button {
+    width: 100%;
+  }
+
+  .date-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tile-grid,
+  .admin-submenu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tile,
+  #adminHubScreen .admin-tile {
+    min-height: 70px;
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 10px 14px;
+  }
+
+  .tile-icon { width: 30px; flex: 0 0 30px; }
+
+  .metric-grid { grid-template-columns: 1fr; }
+
+  .selected-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions button,
+  button.large {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Short portrait screens: compress the sign-in screen without overlapping. */
+@media (max-height: 680px) and (orientation: portrait) {
+  .statusbar { min-height: 50px; }
+  .screen { padding-top: 5px; }
+  #pinScreen .crest { height: 44px; margin-top: 2px; }
+  .crest-small { height: 42px; }
+  h1 { margin: 4px 0 6px; font-size: 21px; }
+  .pin-display { min-height: 38px; font-size: 29px; }
+  .keypad { gap: 5px; }
+  .keypad button { min-height: 44px; font-size: 22px; border-radius: 11px; }
+  .pill-row { gap: 6px; }
+  .pill-button { min-height: 34px; padding: 5px 7px; font-size: 12px; }
+  .message { margin-top: 4px; min-height: 17px; }
+  .admin-link { margin-top: 4px; }
+}
+
+/* Landscape phones: allow rotation and favor width rather than tall square tiles. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .app-shell {
+    min-height: 100dvh;
+    padding-top: max(4px, env(safe-area-inset-top));
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .statusbar { min-height: 44px; }
+  .screen {
+    min-height: calc(100dvh - 48px);
+    padding: 6px 0 calc(32px + env(safe-area-inset-bottom));
+  }
+
+  body.admin-mode .screen { min-height: 100dvh; }
+
+  .crest { height: 42px; margin-top: 0; }
+  .crest-small { height: 38px; }
+  h1 { margin: 3px 0 6px; font-size: 21px; }
+  .student-name { font-size: 25px; margin: 4px 0; }
+
+  #pinScreen .keypad {
+    width: min(74vw, 520px);
+    gap: 5px;
+  }
+  #pinScreen .keypad button { min-height: 38px; }
+  #pinScreen .pill-row { width: min(74vw, 520px); }
+
+  .admin-tile-grid,
+  .admin-submenu-grid,
+  #adminHubScreen .admin-tile-grid {
+    width: min(100%, 650px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-tile,
+  #adminHubScreen .admin-tile {
+    aspect-ratio: auto;
+    min-height: 66px;
+    padding: 7px;
+  }
+
+  .tile-icon { font-size: 22px; }
+
+  .form-card { margin-top: 4px; }
+  .promotion-list { margin-top: 4px; }
+}
+
+/* Tablets and larger screens: avoid giant controls while remaining centered. */
+@media (min-width: 700px) {
+  .app-shell {
+    width: min(calc(100% - 24px), 760px);
+  }
+
+  .screen {
+    min-height: min(680px, calc(100dvh - 60px));
+  }
+
+  .admin-screen .form-card,
+  .admin-screen .admin-list,
+  .admin-screen .check-list,
+  .admin-screen .metric-grid,
+  .admin-screen .dashboard-chart-wrap,
+  .admin-screen .dashboard-table-wrap,
+  .admin-screen .dashboard-shortcuts,
+  .admin-screen .selected-filter,
+  .promotion-list,
+  .initialization-controls,
+  .initialization-list {
+    width: min(100%, 620px);
+  }
+}
