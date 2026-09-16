@@ -9,13 +9,13 @@
   function apiConfigured() {
     return (
       window.PD_CONFIG &&
-      PD_CONFIG.API_URL &&
-      !PD_CONFIG.API_URL.includes('PASTE_YOUR_APPS_SCRIPT')
+      window.PD_CONFIG.API_URL &&
+      !window.PD_CONFIG.API_URL.includes('PASTE_YOUR_APPS_SCRIPT')
     );
   }
 
   function apiUrl() {
-    return String(PD_CONFIG.API_URL || '').trim();
+    return String(window.PD_CONFIG.API_URL || '').trim();
   }
 
   function showScreen(id) {
