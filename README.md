@@ -1,4 +1,4 @@
-# Purple Dragon Attendance PWA — Development v0.67
+# Purple Dragon Attendance PWA — Development v0.68
 
 
 ## New in development v0.63
@@ -168,7 +168,7 @@ This package updates the app icon files to use the exact uploaded Purple Dragon 
 - No Apps Script backend changes are required for v0.65.
 
 
-## v0.67 performance pass
+## v0.68 performance pass
 - Belt definitions load from the local PWA asset instead of Apps Script.
 - The app no longer refreshes the roster from Apps Script on every launch; a locally cached roster is considered fresh for 30 minutes, while member edits still force an immediate refresh.
 - Removed the duplicate 366 KB embedded belt-image JavaScript bundle; belt PNGs remain local PWA assets and are cached on use.
@@ -178,11 +178,19 @@ This package updates the app icon files to use the exact uploaded Purple Dragon 
 - Dashboard backend now returns per-student daily counts so filtering can happen locally.
 
 
-**Backend deployment required for v0.67:** replace `Code.gs` with the supplied v0.67 file, save, then update the existing Apps Script web-app deployment to a new version. Keep the existing PWA `config.js`.
+**Backend deployment required for v0.68:** replace `Code.gs` with the supplied v0.68 file, save, then update the existing Apps Script web-app deployment to a new version. Keep the existing PWA `config.js`.
 
-## v0.67 rank-data reliability fix
+## v0.68 rank-data reliability fix
 - Belt/rank definitions are now embedded directly in `admin.js`.
 - Manage Students, Belt Promotions and Initialize Current Ranks no longer fetch `belts/ranks.json` at runtime.
 - This eliminates the `Could not load local belt definitions` failure caused by a missing/stale ranks JSON file or service-worker cache mismatch.
 - The service worker no longer requires `belts/ranks.json` during installation.
 - No Apps Script backend changes from v0.66 are required.
+
+## v0.68 belt image + admin sign-in fix
+- Restores a local `belt-images.js` bundle containing all belt PNGs as embedded data URLs.
+- Student Details and sign-in confirmation use the embedded image first, so belt images no longer depend on 89 separate GitHub file requests.
+- The belt image bundle is included in the service-worker app shell for reliable offline display.
+- Opening Admin now sends a tiny background `ping` to wake the Apps Script deployment while the PIN is being entered.
+- Admin PIN verification remains server-side; the warm-up request returns no private data and does not bypass authentication.
+- The Admin Sign In button visibly changes to `Checking…` and is disabled during verification to prevent duplicate requests.

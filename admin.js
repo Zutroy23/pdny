@@ -154,6 +154,21 @@
     throw new Error(friendlyAdminError(lastError));
   }
 
+
+  let adminWarmupInFlight = null;
+
+  function warmAdminEndpoint() {
+    if (!navigator.onLine || adminWarmupInFlight) return;
+
+    // Wake the Apps Script deployment while the admin is typing the PIN.
+    // This is deliberately fire-and-forget and does not weaken authentication.
+    adminWarmupInFlight = fetchAdminAttempt('ping', {})
+      .catch(() => null)
+      .finally(() => {
+        adminWarmupInFlight = null;
+      });
+  }
+
   function message(id, text = '') {
     const el = $(id);
     if (!el) return;
@@ -192,19 +207,26 @@
     $('adminPinInput').value = '';
     message('adminLoginMessage', navigator.onLine ? '' : 'Admin functions require internet.');
     show('adminLoginScreen');
+    warmAdminEndpoint();
     setTimeout(() => $('adminPinInput').focus(), 50);
   }
 
   async function verifyAdmin() {
     const candidate = $('adminPinInput').value.trim();
+    const button = $('adminLoginBtn');
 
     if (!candidate) {
       message('adminLoginMessage', 'Enter the Admin PIN.');
       return;
     }
 
+    if (button.disabled) return;
+
     adminPin = candidate;
-    message('adminLoginMessage', 'Checking…');
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Checking…';
+    message('adminLoginMessage', 'Confirming Admin PIN…');
 
     try {
       await api('verify');
@@ -213,6 +235,9 @@
     } catch (err) {
       adminPin = '';
       message('adminLoginMessage', err.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
     }
   }
 
