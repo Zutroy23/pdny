@@ -1,1 +1,1 @@
-self.PD_APP_VERSION = '0.68';
+self.PD_APP_VERSION = '0.69';

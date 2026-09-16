@@ -1402,6 +1402,11 @@
   $('applyInitializeBulkRankBtn').addEventListener('click', applyBulkInitializationRank);
   $('saveInitializedRanksBtn').addEventListener('click', saveInitializedRanks);
   $('checkForUpdateBtn').addEventListener('click', checkForUpdate);
+  $('deviceSyncStatusBtn').addEventListener('click', async () => {
+    if (window.PDOpenDeviceSyncStatus) {
+      await window.PDOpenDeviceSyncStatus();
+    }
+  });
   $('beltPromotionsTile').addEventListener('click', openBeltPromotions);
   $('loadPromotionCandidatesBtn').addEventListener('click', loadPromotionCandidates);
   $('promotionExamDate').addEventListener('change', loadPromotionCandidates);

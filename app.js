@@ -5,6 +5,7 @@
   let syncInProgress = false;
   let syncRequested = false;
   const reconnectTimers = [];
+  let localScreenReturnTarget = 'pinScreen';
 
   const $ = id => document.getElementById(id);
 
@@ -617,16 +618,29 @@
   $('trialBackBtn').addEventListener('click', () => resetToPin());
   $('trialSubmitBtn').addEventListener('click', submitTrial);
 
-  $('showLocalBtn').addEventListener('click', async () => {
+  async function openDeviceSyncStatus(returnTarget = 'pinScreen') {
+    localScreenReturnTarget = returnTarget;
     await refreshLocalScreen();
     showScreen('localScreen');
-  });
+  }
+
+  // Exposed for the Admin menu. Device/Sync Status is no longer shown on the
+  // public student sign-in screen.
+  window.PDOpenDeviceSyncStatus = function() {
+    return openDeviceSyncStatus('adminSettingsScreen');
+  };
 
   $('syncNowBtn').addEventListener('click', async () => {
     await syncNow();
   });
 
-  $('backBtn').addEventListener('click', () => resetToPin());
+  $('backBtn').addEventListener('click', () => {
+    if (localScreenReturnTarget === 'adminSettingsScreen') {
+      showScreen('adminSettingsScreen');
+      return;
+    }
+    resetToPin();
+  });
 
   window.addEventListener('online', () => {
     refreshStatus();

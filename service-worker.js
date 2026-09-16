@@ -1,16 +1,16 @@
-importScripts('./version.js?v=0.68');
+importScripts('./version.js?v=0.69');
 const CACHE_NAME = `purple-dragon-pwa-v${self.PD_APP_VERSION}`;
 
 const APP_SHELL = [
   './',
-  './index.html?v=0.68',
-  './styles.css?v=0.68',
+  './index.html?v=0.69',
+  './styles.css?v=0.69',
   './config.js',
-  './version.js?v=0.68',
-  './db.js?v=0.68',
-  './belt-images.js?v=0.68',
-  './app.js?v=0.68',
-  './admin.js?v=0.68',
+  './version.js?v=0.69',
+  './db.js?v=0.69',
+  './belt-images.js?v=0.69',
+  './app.js?v=0.69',
+  './admin.js?v=0.69',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -91,7 +91,7 @@ self.addEventListener('fetch', event => {
         .catch(async () => {
           const exact = await caches.match(request);
           if (exact) return exact;
-          return caches.match('./index.html?v=0.68');
+          return caches.match('./index.html?v=0.69');
         })
     );
     return;
