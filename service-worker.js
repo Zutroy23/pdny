@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purple-dragon-pwa-v6';
+const CACHE_NAME = 'purple-dragon-pwa-v7';
 
 const APP_SHELL = [
   './',

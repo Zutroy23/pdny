@@ -235,6 +235,15 @@
 
     <section id="adminDashboardScreen" class="screen admin-screen">
       <h1>Attendance Dashboard</h1>
+
+      <div class="dashboard-shortcuts">
+        <button class="dashboard-shortcut" data-range="today">Today</button>
+        <button class="dashboard-shortcut" data-range="7">Last 7 Days</button>
+        <button class="dashboard-shortcut" data-range="week">This Week</button>
+        <button class="dashboard-shortcut" data-range="month">This Month</button>
+        <button class="dashboard-shortcut" data-range="30">Last 30 Days</button>
+      </div>
+
       <div class="form-card report-controls">
         <div class="date-pair">
           <div><label for="dashboardStart">Start</label><input id="dashboardStart" type="date"></div>
@@ -243,8 +252,25 @@
         <button id="loadDashboardBtn" class="primary">Show Report</button>
         <div id="dashboardMessage" class="message compact-message"></div>
       </div>
+
+      <div id="dashboardSelectedStudent" class="selected-filter" style="display:none;">
+        <span>Showing: <strong id="dashboardSelectedStudentName"></strong></span>
+        <button id="clearDashboardStudentBtn" type="button">Clear filter</button>
+      </div>
+
       <div id="dashboardSummary" class="metric-grid"></div>
-      <div id="dashboardTable" class="admin-list"></div>
+
+      <div class="dashboard-chart-wrap">
+        <div class="dashboard-section-title">Daily Attendance</div>
+        <div id="attendanceChart" class="attendance-chart"></div>
+      </div>
+
+      <div class="dashboard-table-wrap">
+        <div class="dashboard-section-title">Attendance by Student</div>
+        <div class="dashboard-note">Tap a student to filter the graph and summary. The list always shows everyone in the selected range.</div>
+        <div id="dashboardTable" class="admin-list dashboard-student-list"></div>
+      </div>
+
       <button id="dashboardBackBtn" class="secondary">Back</button>
     </section>
 

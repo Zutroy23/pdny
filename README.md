@@ -1,73 +1,60 @@
-# Purple Dragon Attendance PWA — Phase 4
+# Purple Dragon Attendance PWA — Phase 5
 
-Phase 4 brings the production admin/member workflow into the PWA and includes
-the two fixes identified during Phase 3 testing.
+Phase 5 fixes the Admin regressions found during Phase 4 testing.
 
-## Phase 3 fixes carried forward
+## Fixed
 
-- Keypad bottom row is now: **Clear | 0 | ⌫**
-- `⌫` removes only the last entered digit.
-- If a student or trial sign-in is created while another sync is already in
-  progress, the app remembers that another sync is required and immediately
-  runs a second pass when the current sync finishes.
-- The reconnect retry logic from the prior build remains:
-  - immediate
-  - 3 seconds
-  - 10 seconds
-  - 30 seconds
-  - foreground/focus retry
-  - one-minute safety retry
+### Today's Sign-ins
+- Every row again has a **Delete** button.
+- Delete requires confirmation.
+- The server-side Log row is removed.
+- The matching local attendance record is also removed on that device so the
+  student can legitimately sign in again after an accidental entry is deleted.
 
-## PWA Admin
+### Attendance Dashboard
+The PWA now uses the real server response structure:
+- `metrics`
+- `chartRows`
+- `studentRows`
 
-Tap the Purple Dragon crest on the main keypad to open Admin.
+It restores:
+- KPI cards
+- daily attendance graph
+- attendance-by-student list
+- tap a student to filter the graph and KPI cards
+- clear student filter
+- Today / Last 7 Days / This Week / This Month / Last 30 Days shortcuts
 
-The main Admin hub uses the six-tile layout:
+The student list always continues to show everyone in the selected range,
+matching the production dashboard behavior.
 
-1. Add Student
-2. Deactivate Student
-3. Today's Sign-ins
-4. Attendance Catch Up
-5. Reporting
-6. Admin
+### Admin sizing
+- Online / Pending status header is hidden while inside Admin.
+- Admin content is slightly narrower.
+- Manage Members tiles and spacing are more compact vertically.
 
-### Member management
+### Existing fixes retained
+- Keypad: Clear | 0 | Backspace
+- immediate second sync pass when a sign-in arrives during an active sync
+- reconnect retries
+- one-minute safety sync
+- offline attendance and trial queues
 
-- Add Student creates the next student number and sets Active = TRUE.
-- Deactivate Student sets Members column D to FALSE.
-- Reactivate Student sets it back to TRUE.
-- Member rows and historical attendance are never deleted.
-
-### Reporting
-
-- Attendance Dashboard uses the existing server-side dashboard calculations.
-- CSV export uses the existing attendance CSV report.
-
-### Admin settings
-
-- Open Google Sheet
-- Change Admin PIN
-- Refresh App Cache
-- Exit to Sign-In
-
-## Important deployment note
-
-Keep your existing configured `config.js` in GitHub. This package contains only
-`config.example.js` so it cannot accidentally overwrite your working Apps
-Script URL.
+### Additional fixes
+- CSV export now reads the backend's actual `csvData` field.
+- Add/deactivate/reactivate forces an immediate roster refresh on the PWA.
 
 ## Deployment
 
-1. Replace Apps Script `Code.gs` with `Dojo_Code_PWA_Phase4.gs`.
+1. Replace Apps Script `Code.gs` with `Dojo_Code_PWA_Phase5.gs`.
 2. Save and update the existing Apps Script web-app deployment.
-3. Upload the files from this PWA package to GitHub.
-4. Do NOT remove or replace your existing `config.js`.
+3. Upload the Phase 5 PWA files to GitHub, replacing matching files.
+4. Keep your existing configured `config.js`; do not replace it.
 5. Commit and wait for GitHub Pages.
-6. Open the PWA online, close it, and reopen it once so service worker v6 takes control.
-7. Press Sync Now once.
-8. Test a normal online sign-in and confirm it syncs promptly.
-9. Test the ⌫ keypad button.
-10. Tap the crest and test the Admin PIN and member/admin screens.
-
-Admin operations intentionally require an internet connection because they
-change or report on the authoritative Google Sheet data.
+6. Open the PWA online, close it, then reopen it once so service worker v7 controls it.
+7. Verify:
+   - Today's Sign-ins -> Delete
+   - Attendance Dashboard graph + student list
+   - tap student -> filtered graph/KPIs
+   - Admin screens fit without horizontal crowding
+   - Manage Members fits vertically

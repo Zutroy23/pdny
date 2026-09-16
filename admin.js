@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
 
   function show(id) {
+    document.body.classList.add('admin-mode');
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     $(id).classList.add('active');
   }
@@ -63,6 +64,7 @@
 
   function backHome() {
     adminPin = '';
+    document.body.classList.remove('admin-mode');
     if (typeof window !== 'undefined') {
       document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
       $('pinScreen').classList.add('active');
@@ -108,9 +110,8 @@
       const result = await api('addStudent', { name });
       message('addStudentMessage', `${result.name} added. Number: ${result.pin}`);
       $('newStudentName').value = '';
-      if (window.PDDB && navigator.onLine && window.PD_CONFIG) {
-        // Normal foreground sync will refresh the roster shortly.
-        window.dispatchEvent(new Event('online'));
+      if (window.PDSyncNow) {
+        window.PDSyncNow().catch(console.error);
       }
     } catch (err) {
       message('addStudentMessage', err.message);
@@ -160,6 +161,7 @@
           try {
             const r = await api('deactivate', { pin: member.pin });
             message('deactivateMessage', r.message);
+            if (window.PDSyncNow) window.PDSyncNow().catch(console.error);
             searchDeactivate();
           } catch (err) {
             message('deactivateMessage', err.message);
@@ -189,6 +191,7 @@
           try {
             const r = await api('reactivate', { pin: member.pin });
             message('reactivateMessage', r.message);
+            if (window.PDSyncNow) window.PDSyncNow().catch(console.error);
             searchReactivate();
           } catch (err) {
             message('reactivateMessage', err.message);
@@ -223,13 +226,53 @@
         meta.textContent = `Number ${entry.pin}`;
         left.append(name, meta);
 
-        const time = document.createElement('div');
+        const actions = document.createElement('div');
+        actions.className = 'today-entry-actions';
+
+        const time = document.createElement('span');
         time.textContent = entry.time;
 
-        row.append(left, time);
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'today-delete';
+        del.textContent = 'Delete';
+        del.addEventListener('click', async () => {
+          if (!confirm(`Delete today's sign-in for ${entry.name} (${entry.pin})?`)) {
+            return;
+          }
+
+          del.disabled = true;
+
+          try {
+            const deleted = await api('deleteTodaySignIn', { pin: entry.pin });
+
+            // Also remove the same day's local PWA record, if it exists,
+            // so the student can sign in again on this device.
+            if (
+              window.PDDB &&
+              typeof window.PDDB.deleteAttendanceForPinDate === 'function'
+            ) {
+              await window.PDDB.deleteAttendanceForPinDate(
+                entry.pin,
+                todayKey()
+              );
+            }
+
+            message('todaySigninsMessage', deleted.message || 'Sign-in deleted.');
+            await loadToday();
+          } catch (err) {
+            message('todaySigninsMessage', err.message);
+            del.disabled = false;
+          }
+        });
+
+        actions.append(time, del);
+        row.append(left, actions);
         box.appendChild(row);
       });
+
     } catch (err) {
+      box.innerHTML = '';
       message('todaySigninsMessage', err.message);
     }
   }
@@ -293,48 +336,295 @@
     }
   }
 
+  let dashboardStudentFilter = '';
+
+  function parseLocalDateKey(key) {
+    const parts = String(key || '').split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0, 0);
+  }
+
+  function formatDashboardDate(key, includeYear = false) {
+    const d = parseLocalDateKey(key);
+    if (!d) return key;
+
+    return d.toLocaleDateString(
+      undefined,
+      includeYear
+        ? { month: 'short', day: 'numeric', year: 'numeric' }
+        : { month: 'short', day: 'numeric' }
+    );
+  }
+
+  function renderDashboardChart(result) {
+    const box = $('attendanceChart');
+    box.innerHTML = '';
+
+    const rows = Array.isArray(result.chartRows) ? result.chartRows : [];
+
+    if (!rows.length) {
+      box.textContent = 'No chart data for this range.';
+      return;
+    }
+
+    const width = 720;
+    const height = 245;
+    const pad = { left: 42, right: 14, top: 16, bottom: 45 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    const maxCount = Math.max(1, ...rows.map(r => Number(r.count) || 0));
+    const yMax = Math.max(4, Math.ceil(maxCount / 4) * 4);
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute(
+      'aria-label',
+      dashboardStudentFilter
+        ? `Daily attendance for ${dashboardStudentFilter}`
+        : 'Daily attendance'
+    );
+
+    function el(name, attrs = {}, text = '') {
+      const node = document.createElementNS(ns, name);
+      Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+      if (text !== '') node.textContent = text;
+      return node;
+    }
+
+    // Horizontal grid and Y labels.
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (plotH * i / 4);
+      const value = Math.round(yMax * (1 - i / 4));
+
+      svg.appendChild(el('line', {
+        x1: pad.left,
+        y1: y,
+        x2: width - pad.right,
+        y2: y,
+        class: 'chart-grid'
+      }));
+
+      svg.appendChild(el('text', {
+        x: pad.left - 8,
+        y: y + 4,
+        'text-anchor': 'end',
+        class: 'chart-y-label'
+      }, String(value)));
+    }
+
+    svg.appendChild(el('line', {
+      x1: pad.left,
+      y1: pad.top,
+      x2: pad.left,
+      y2: height - pad.bottom,
+      class: 'chart-axis'
+    }));
+
+    svg.appendChild(el('line', {
+      x1: pad.left,
+      y1: height - pad.bottom,
+      x2: width - pad.right,
+      y2: height - pad.bottom,
+      class: 'chart-axis'
+    }));
+
+    const crossesYear =
+      result.startDate &&
+      result.endDate &&
+      String(result.startDate).slice(0, 4) !== String(result.endDate).slice(0, 4);
+
+    const points = rows.map((row, i) => {
+      const x = rows.length === 1
+        ? pad.left + plotW / 2
+        : pad.left + (plotW * i / (rows.length - 1));
+      const count = Number(row.count) || 0;
+      const y = pad.top + plotH - (count / yMax) * plotH;
+      return { x, y, count, date: row.date };
+    });
+
+    svg.appendChild(el('polyline', {
+      points: points.map(p => `${p.x},${p.y}`).join(' '),
+      class: 'chart-line'
+    }));
+
+    points.forEach(point => {
+      const circle = el('circle', {
+        cx: point.x,
+        cy: point.y,
+        r: 4,
+        class: 'chart-point'
+      });
+      const title = el(
+        'title',
+        {},
+        `${formatDashboardDate(point.date, true)}: ${point.count} sign-in${point.count === 1 ? '' : 's'}`
+      );
+      circle.appendChild(title);
+      svg.appendChild(circle);
+    });
+
+    const labelEvery =
+      rows.length <= 14 ? 1 : Math.ceil(rows.length / 7);
+
+    points.forEach((point, i) => {
+      if (
+        i !== 0 &&
+        i !== points.length - 1 &&
+        i % labelEvery !== 0
+      ) {
+        return;
+      }
+
+      svg.appendChild(el('text', {
+        x: point.x,
+        y: height - pad.bottom + 19,
+        'text-anchor': 'middle',
+        class: 'chart-label'
+      }, formatDashboardDate(point.date, crossesYear)));
+    });
+
+    box.appendChild(svg);
+  }
+
+  function renderDashboardStudentList(result) {
+    const box = $('dashboardTable');
+    box.innerHTML = '';
+
+    const rows = Array.isArray(result.studentRows) ? result.studentRows : [];
+
+    if (!rows.length) {
+      box.textContent = 'No students attended during this range.';
+      return;
+    }
+
+    rows.forEach(student => {
+      const row = document.createElement('div');
+      row.className = 'admin-list-row';
+      row.tabIndex = 0;
+
+      const left = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = student.name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = student.pin
+        ? `Number ${student.pin}`
+        : 'Historical attendance';
+      left.append(name, meta);
+
+      const count = document.createElement('span');
+      const days = Number(student.daysAttended) || 0;
+      count.textContent = `${days} day${days === 1 ? '' : 's'}`;
+
+      const applyFilter = async () => {
+        dashboardStudentFilter = student.name;
+        await loadDashboard();
+      };
+
+      row.addEventListener('click', applyFilter);
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          applyFilter();
+        }
+      });
+
+      row.append(left, count);
+      box.appendChild(row);
+    });
+  }
+
   async function loadDashboard() {
     const start = $('dashboardStart').value;
     const end = $('dashboardEnd').value;
+
     message('dashboardMessage', 'Loading…');
     $('dashboardSummary').innerHTML = '';
     $('dashboardTable').innerHTML = '';
+    $('attendanceChart').innerHTML = '';
 
     try {
-      const result = await api('dashboard', { start, end });
+      const result = await api('dashboard', {
+        start,
+        end,
+        student: dashboardStudentFilter
+      });
+
       message('dashboardMessage', '');
 
-      const metrics = [
-        ['Total Sign-ins', result.totalSignIns],
-        ['Unique Students', result.uniqueStudents],
-        ['Avg / Active Day', result.averagePerActiveDay],
-        ['Busiest Day', result.busiestDay || '—']
+      const metrics = result.metrics || {};
+      const busiest = metrics.busiestDay
+        ? `${formatDashboardDate(metrics.busiestDay)} (${metrics.busiestDayCount})`
+        : '—';
+
+      const cards = [
+        ['Total Sign-ins', metrics.totalLogins ?? 0],
+        ['Unique Students', metrics.uniqueStudents ?? 0],
+        ['Avg / Active Day', metrics.averagePerActiveDay ?? 0],
+        ['Busiest Day', busiest]
       ];
 
-      metrics.forEach(([label, value]) => {
+      cards.forEach(([label, value]) => {
         const card = document.createElement('div');
         card.className = 'metric-card';
+
         const strong = document.createElement('strong');
-        strong.textContent = value;
+        strong.textContent = String(value);
+
         const span = document.createElement('span');
         span.textContent = label;
+
         card.append(strong, span);
         $('dashboardSummary').appendChild(card);
       });
 
-      (result.studentTotals || []).forEach(student => {
-        const row = document.createElement('div');
-        row.className = 'admin-list-row';
-        const name = document.createElement('strong');
-        name.textContent = student.name;
-        const count = document.createElement('span');
-        count.textContent = `${student.days} day${student.days === 1 ? '' : 's'}`;
-        row.append(name, count);
-        $('dashboardTable').appendChild(row);
-      });
+      if (dashboardStudentFilter) {
+        $('dashboardSelectedStudentName').textContent = dashboardStudentFilter;
+        $('dashboardSelectedStudent').style.display = 'flex';
+      } else {
+        $('dashboardSelectedStudent').style.display = 'none';
+      }
+
+      renderDashboardChart(result);
+      renderDashboardStudentList(result);
+
     } catch (err) {
       message('dashboardMessage', err.message);
     }
+  }
+
+  function setDashboardRange(kind) {
+    const end = new Date();
+    const start = new Date(end);
+
+    if (kind === 'today') {
+      // no change
+    } else if (kind === '7') {
+      start.setDate(end.getDate() - 6);
+    } else if (kind === '30') {
+      start.setDate(end.getDate() - 29);
+    } else if (kind === 'week') {
+      const day = end.getDay();
+      const daysSinceMonday = (day + 6) % 7;
+      start.setDate(end.getDate() - daysSinceMonday);
+    } else if (kind === 'month') {
+      start.setDate(1);
+    }
+
+    function key(d) {
+      return [
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2, '0'),
+        String(d.getDate()).padStart(2, '0')
+      ].join('-');
+    }
+
+    $('dashboardStart').value = key(start);
+    $('dashboardEnd').value = key(end);
+    loadDashboard();
   }
 
   async function downloadCsv() {
@@ -345,7 +635,7 @@
         end: $('csvEnd').value
       });
 
-      const blob = new Blob([result.csv], { type: 'text/csv;charset=utf-8' });
+      const blob = new Blob([result.csvData], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -429,10 +719,22 @@
   $('submitCatchupBtn').addEventListener('click', submitCatchup);
 
   $('openDashboardBtn').addEventListener('click', () => {
+    dashboardStudentFilter = '';
     $('dashboardStart').value = daysAgoKey(29);
     $('dashboardEnd').value = todayKey();
     show('adminDashboardScreen');
+    loadDashboard();
   });
+
+  document.querySelectorAll('.dashboard-shortcut').forEach(btn => {
+    btn.addEventListener('click', () => setDashboardRange(btn.dataset.range));
+  });
+
+  $('clearDashboardStudentBtn').addEventListener('click', async () => {
+    dashboardStudentFilter = '';
+    await loadDashboard();
+  });
+
   $('dashboardBackBtn').addEventListener('click', () => show('adminReportingScreen'));
   $('loadDashboardBtn').addEventListener('click', loadDashboard);
 

@@ -628,6 +628,11 @@
     });
   }
 
+  // Allow the admin UI to force a roster refresh after member changes.
+  window.PDSyncNow = function() {
+    return syncNow({ quiet: true });
+  };
+
   async function init() {
     renderPin();
     await refreshStatus();

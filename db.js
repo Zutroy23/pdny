@@ -176,6 +176,36 @@ const PDDB = (() => {
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  async function deleteAttendanceForPinDate(pin, dateKey) {
+    const db = await open();
+    const key = `${String(pin)}|${String(dateKey)}`;
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(ATTENDANCE, 'readwrite');
+      const store = tx.objectStore(ATTENDANCE);
+      const index = store.index('pinDate');
+      const req = index.openCursor(IDBKeyRange.only(key));
+      let deleted = 0;
+
+      req.onsuccess = () => {
+        const cursor = req.result;
+
+        if (!cursor) {
+          return;
+        }
+
+        cursor.delete();
+        deleted++;
+        cursor.continue();
+      };
+
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => resolve(deleted);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  }
+
   async function addAttendance(student) {
     const now = new Date();
     const dateKey = localDateKey(now);
@@ -338,6 +368,7 @@ const PDDB = (() => {
     countAttendance: () => count(ATTENDANCE),
     countTrials: () => count(TRIALS),
     hasAttendanceToday,
+    deleteAttendanceForPinDate,
     addAttendance,
     addTrial,
     getPendingAttendance: limit => pendingRows(ATTENDANCE, limit),
