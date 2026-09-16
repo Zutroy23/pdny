@@ -450,8 +450,23 @@
     };
   }
 
+  async function rosterNeedsRefresh(force = false) {
+    if (force) return true;
+    const count = await PDDB.countStudents();
+    if (!count) return true;
+
+    const last = await PDDB.getMeta('lastRosterSync');
+    if (!last) return true;
+    const age = Date.now() - new Date(last).getTime();
+    // Roster changes made through this PWA force an immediate refresh.
+    // Otherwise, a 30-minute freshness window avoids hitting Apps Script on
+    // every app launch/admin visit while still keeping devices current.
+    return !Number.isFinite(age) || age > 30 * 60 * 1000;
+  }
+
   async function syncNow(options = {}) {
     const quiet = Boolean(options.quiet);
+    const forceRoster = Boolean(options.forceRoster);
 
     if (syncInProgress) {
       syncRequested = true;
@@ -485,7 +500,10 @@
     try {
       const attendanceResult = await uploadPendingAttendance();
       const trialResult = await uploadPendingTrials();
-      const rosterCount = await fetchRoster();
+      let rosterCount = await PDDB.countStudents();
+      if (await rosterNeedsRefresh(forceRoster)) {
+        rosterCount = await fetchRoster();
+      }
 
       await PDDB.setMeta('lastSuccessfulSync', new Date().toISOString());
       await refreshStatus();
@@ -671,7 +689,7 @@
 
   // Allow the admin UI to force a roster refresh after member changes.
   window.PDSyncNow = function() {
-    return syncNow({ quiet: true });
+    return syncNow({ quiet: true, forceRoster: true });
   };
 
   async function init() {

@@ -4,6 +4,7 @@
   let editingStudent = null;
   let promotionStudents = [];
   let initializationStudents = [];
+  let dashboardBaseResult = null;
 
   const $ = id => document.getElementById(id);
 
@@ -633,9 +634,10 @@
       const days = Number(student.daysAttended) || 0;
       count.textContent = `${days} day${days === 1 ? '' : 's'}`;
 
-      const applyFilter = async () => {
+      const applyFilter = () => {
+        if (!dashboardBaseResult) return;
         dashboardStudentFilter = student.name;
-        await loadDashboard();
+        renderDashboardResult(filteredDashboardResult(dashboardBaseResult, student.name));
       };
 
       row.addEventListener('click', applyFilter);
@@ -651,62 +653,111 @@
     });
   }
 
+  function filteredDashboardResult(base, studentName) {
+    if (!base || !studentName) return base;
+
+    const selected = (base.studentRows || []).find(row => row.name === studentName);
+    if (!selected) return base;
+
+    const dateCounts = selected.dateCounts || {};
+    const chartRows = (base.chartRows || []).map(point => ({
+      date: point.date,
+      count: Number(dateCounts[point.date] || 0)
+    }));
+
+    let totalLogins = 0;
+    let activeDays = 0;
+    let busiestDay = '';
+    let busiestDayCount = 0;
+
+    chartRows.forEach(point => {
+      totalLogins += point.count;
+      if (point.count > 0) activeDays++;
+      if (point.count > busiestDayCount) {
+        busiestDayCount = point.count;
+        busiestDay = point.date;
+      }
+    });
+
+    return {
+      ...base,
+      chartRows,
+      metrics: {
+        totalLogins,
+        uniqueStudents: totalLogins > 0 ? 1 : 0,
+        activeDays,
+        averagePerActiveDay: activeDays ? Math.round((totalLogins / activeDays) * 10) / 10 : 0,
+        busiestDay,
+        busiestDayCount
+      },
+      studentFilter: studentName
+    };
+  }
+
+  function renderDashboardResult(result) {
+    const metrics = result.metrics || {};
+    const busiest = metrics.busiestDay
+      ? `${formatDashboardDate(metrics.busiestDay)} (${metrics.busiestDayCount})`
+      : '—';
+
+    $('dashboardSummary').innerHTML = '';
+    $('dashboardTable').innerHTML = '';
+    $('attendanceChart').innerHTML = '';
+
+    const cards = [
+      ['Total Sign-ins', metrics.totalLogins ?? 0],
+      ['Unique Students', metrics.uniqueStudents ?? 0],
+      ['Avg / Active Day', metrics.averagePerActiveDay ?? 0],
+      ['Busiest Day', busiest]
+    ];
+
+    cards.forEach(([label, value]) => {
+      const card = document.createElement('div');
+      card.className = 'metric-card';
+      const strong = document.createElement('strong');
+      strong.textContent = String(value);
+      const span = document.createElement('span');
+      span.textContent = label;
+      card.append(strong, span);
+      $('dashboardSummary').appendChild(card);
+    });
+
+    if (dashboardStudentFilter) {
+      $('dashboardSelectedStudentName').textContent = dashboardStudentFilter;
+      $('dashboardSelectedStudent').style.display = 'flex';
+    } else {
+      $('dashboardSelectedStudent').style.display = 'none';
+    }
+
+    renderDashboardChart(result);
+    renderDashboardStudentList(result);
+  }
+
   async function loadDashboard() {
     const start = $('dashboardStart').value;
     const end = $('dashboardEnd').value;
 
-    message('dashboardMessage', 'Loading…');
+    if (!start || !end) {
+      message('dashboardMessage', 'Choose a date range, then tap Show Report.');
+      return;
+    }
+
+    message('dashboardMessage', 'Loading attendance data…');
+    $('loadDashboardBtn').disabled = true;
     $('dashboardSummary').innerHTML = '';
     $('dashboardTable').innerHTML = '';
     $('attendanceChart').innerHTML = '';
 
     try {
-      const result = await api('dashboard', {
-        start,
-        end,
-        student: dashboardStudentFilter
-      });
-
+      const result = await api('dashboard', { start, end, student: '' });
+      dashboardBaseResult = result;
+      dashboardStudentFilter = '';
       message('dashboardMessage', '');
-
-      const metrics = result.metrics || {};
-      const busiest = metrics.busiestDay
-        ? `${formatDashboardDate(metrics.busiestDay)} (${metrics.busiestDayCount})`
-        : '—';
-
-      const cards = [
-        ['Total Sign-ins', metrics.totalLogins ?? 0],
-        ['Unique Students', metrics.uniqueStudents ?? 0],
-        ['Avg / Active Day', metrics.averagePerActiveDay ?? 0],
-        ['Busiest Day', busiest]
-      ];
-
-      cards.forEach(([label, value]) => {
-        const card = document.createElement('div');
-        card.className = 'metric-card';
-
-        const strong = document.createElement('strong');
-        strong.textContent = String(value);
-
-        const span = document.createElement('span');
-        span.textContent = label;
-
-        card.append(strong, span);
-        $('dashboardSummary').appendChild(card);
-      });
-
-      if (dashboardStudentFilter) {
-        $('dashboardSelectedStudentName').textContent = dashboardStudentFilter;
-        $('dashboardSelectedStudent').style.display = 'flex';
-      } else {
-        $('dashboardSelectedStudent').style.display = 'none';
-      }
-
-      renderDashboardChart(result);
-      renderDashboardStudentList(result);
-
+      renderDashboardResult(result);
     } catch (err) {
       retryMessage('dashboardMessage', err.message, loadDashboard);
+    } finally {
+      $('loadDashboardBtn').disabled = false;
     }
   }
 
@@ -793,8 +844,22 @@
 
   async function ensureRanksLoaded() {
     if (beltRanks.length) return beltRanks;
-    const result = await api('beltDefinitions');
-    beltRanks = Array.isArray(result.ranks) ? result.ranks : [];
+
+    // Belt definitions ship with the PWA. Loading them locally avoids an
+    // unnecessary Apps Script round-trip every time belt/student admin opens.
+    const response = await fetch('./belts/ranks.json', { cache: 'force-cache' });
+    if (!response.ok) throw new Error('Could not load local belt definitions.');
+    const rows = await response.json();
+    beltRanks = (Array.isArray(rows) ? rows : []).map((rank, index) => ({
+      order: Number(rank.order || index + 1),
+      id: rank.id,
+      name: rank.name,
+      category: rank.category || '',
+      standardNextRankId: rank.standardNextRankId || rank.std || '',
+      eliteEligible: rank.eliteEligible === true || rank.elite === true,
+      image: rank.image || `${String(rank.id || '').toLowerCase()}.png`,
+      eliteImage: rank.eliteImage || (rank.elite === true ? `${String(rank.id || '').toLowerCase()}_elite.png` : '')
+    }));
     return beltRanks;
   }
 
@@ -853,12 +918,7 @@
     show('adminManageStudentsScreen');
     message('manageStudentMessage', '');
     $('manageStudentResults').innerHTML = '';
-    try {
-      await ensureRanksLoaded();
-      await searchManageStudents();
-    } catch (err) {
-      message('manageStudentMessage', err.message);
-    }
+    await searchManageStudents();
   }
 
   async function searchManageStudents() {
@@ -887,7 +947,7 @@
         left.append(name, meta);
 
         row.appendChild(left);
-        row.addEventListener('click', () => openStudentEditor(student.pin));
+        row.addEventListener('click', () => openStudentEditor(student));
         $('manageStudentResults').appendChild(row);
       });
     } catch (err) {
@@ -895,31 +955,25 @@
     }
   }
 
-  async function openStudentEditor(pin) {
-    const row = document.querySelector(`.student-manage-result[data-pin="${CSS.escape(String(pin))}"]`);
-    if (row) row.classList.add('is-loading');
-    message('manageStudentMessage', 'Loading student…');
+  async function openStudentEditor(student) {
+    // searchStudents already returns the complete editable student record.
+    // Reusing it here removes a second Apps Script request just to reopen the
+    // same row the server returned moments earlier.
+    if (!student || !student.pin) return;
 
-    try {
-      await ensureRanksLoaded();
-      const result = await api('getStudent', { pin });
-      editingStudent = result.student;
+    editingStudent = { ...student };
+    await ensureRanksLoaded();
 
-      $('editStudentPin').textContent = editingStudent.pin;
-      $('editStudentName').value = editingStudent.name;
-      $('editStudentBaseDays').value = editingStudent.baseDays ?? 0;
-      $('editStudentActive').checked = editingStudent.active !== false;
-      populateRankSelect($('editStudentRank'), editingStudent.rankId || '', true);
-      $('editStudentElite').checked = Boolean(editingStudent.elite);
-      updateStudentBeltPreview();
-      message('manageStudentMessage', '');
-      message('editStudentMessage', '');
-      show('adminStudentEditScreen');
-    } catch (err) {
-      retryMessage('manageStudentMessage', err.message, () => openStudentEditor(pin));
-    } finally {
-      if (row) row.classList.remove('is-loading');
-    }
+    $('editStudentPin').textContent = editingStudent.pin;
+    $('editStudentName').value = editingStudent.name;
+    $('editStudentBaseDays').value = editingStudent.baseDays ?? 0;
+    $('editStudentActive').checked = editingStudent.active !== false;
+    populateRankSelect($('editStudentRank'), editingStudent.rankId || '', true);
+    $('editStudentElite').checked = Boolean(editingStudent.elite);
+    updateStudentBeltPreview();
+    message('manageStudentMessage', '');
+    message('editStudentMessage', '');
+    show('adminStudentEditScreen');
   }
 
   async function saveStudent() {
@@ -1358,19 +1412,24 @@
 
   $('openDashboardBtn').addEventListener('click', () => {
     dashboardStudentFilter = '';
+    dashboardBaseResult = null;
     $('dashboardStart').value = daysAgoKey(29);
     $('dashboardEnd').value = todayKey();
+    $('dashboardSummary').innerHTML = '';
+    $('dashboardTable').innerHTML = '';
+    $('attendanceChart').innerHTML = '';
+    $('dashboardSelectedStudent').style.display = 'none';
+    message('dashboardMessage', 'Choose a date range or shortcut, then tap Show Report.');
     show('adminDashboardScreen');
-    loadDashboard();
   });
 
   document.querySelectorAll('.dashboard-shortcut').forEach(btn => {
     btn.addEventListener('click', () => setDashboardRange(btn.dataset.range));
   });
 
-  $('clearDashboardStudentBtn').addEventListener('click', async () => {
+  $('clearDashboardStudentBtn').addEventListener('click', () => {
     dashboardStudentFilter = '';
-    await loadDashboard();
+    if (dashboardBaseResult) renderDashboardResult(dashboardBaseResult);
   });
 
   $('dashboardBackBtn').addEventListener('click', () => show('adminReportingScreen'));

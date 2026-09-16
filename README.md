@@ -1,4 +1,4 @@
-# Purple Dragon Attendance PWA — Development v0.65
+# Purple Dragon Attendance PWA — Development v0.66
 
 
 ## New in development v0.63
@@ -166,3 +166,16 @@ This package updates the app icon files to use the exact uploaded Purple Dragon 
 - Manage Students shows `Loading student…` while a selected student record is being fetched and visually marks the selected row as loading.
 - Manage Students and Attendance Dashboard show a friendly Retry button after automatic retries are exhausted.
 - No Apps Script backend changes are required for v0.65.
+
+
+## v0.66 performance pass
+- Belt definitions load from the local PWA asset instead of Apps Script.
+- The app no longer refreshes the roster from Apps Script on every launch; a locally cached roster is considered fresh for 30 minutes, while member edits still force an immediate refresh.
+- Removed the duplicate 366 KB embedded belt-image JavaScript bundle; belt PNGs remain local PWA assets and are cached on use.
+- Attendance Dashboard no longer auto-queries when opened. It shows a clear instruction until a user picks a shortcut/range and requests the report.
+- Attendance Dashboard student filtering is now client-side after the first report load, eliminating a full Apps Script/Sheet scan on every student tap.
+- Backend member/rank admin builds the belt definition map once per request rather than once per student row, and reads only Members columns A:F.
+- Dashboard backend now returns per-student daily counts so filtering can happen locally.
+
+
+**Backend deployment required for v0.66:** replace `Code.gs` with the supplied v0.66 file, save, then update the existing Apps Script web-app deployment to a new version. Keep the existing PWA `config.js`.
