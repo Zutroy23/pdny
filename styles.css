@@ -340,3 +340,154 @@ button.large {
 
   .screen { min-height: 640px; }
 }
+
+
+.crest-clickable { cursor: pointer; }
+
+.backspace-key {
+  font-size: 25px !important;
+}
+
+.admin-screen {
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.admin-tile-grid,
+.admin-submenu-grid {
+  width: min(94vw, 520px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.admin-tile {
+  aspect-ratio: 1 / 1;
+  min-height: 118px;
+  border: 0;
+  border-radius: 16px;
+  color: #fff;
+  padding: 12px;
+  font-weight: 750;
+  font-size: clamp(16px, 3vw, 20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.admin-tile.green { background: #2e7d32; }
+.admin-tile.red { background: #b71c1c; }
+.admin-tile.teal { background: #00695c; }
+.admin-tile.gold { background: #8d6e00; }
+.admin-tile.purple { background: #6a1b9a; }
+.admin-tile.blue { background: #1565c0; }
+
+.tile-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.admin-list,
+.check-list {
+  width: min(94vw, 620px);
+  display: grid;
+  gap: 7px;
+  margin: 4px 0 10px;
+}
+
+.admin-list-row,
+.check-row {
+  border: 1px solid #4c3764;
+  border-radius: 11px;
+  background: #170a28;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-list-row .meta {
+  color: #c9c2d2;
+  font-size: 13px;
+}
+
+.result-action {
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: white;
+  font-weight: 700;
+  background: #b71c1c;
+}
+
+.result-action.reactivate { background: #2e7d32; }
+
+.check-row {
+  justify-content: flex-start;
+}
+
+.check-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+}
+
+.date-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metric-grid {
+  width: min(94vw, 620px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.metric-card {
+  border: 1px solid #4c3764;
+  border-radius: 12px;
+  background: #170a28;
+  padding: 12px;
+  text-align: center;
+}
+
+.metric-card strong {
+  display: block;
+  color: #ffb300;
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+@media (max-height: 800px) {
+  #adminHubScreen .admin-tile-grid {
+    width: min(92vw, 455px);
+    gap: 9px;
+  }
+
+  #adminHubScreen .admin-tile {
+    min-height: 0;
+    border-radius: 14px;
+    font-size: 15px;
+    gap: 5px;
+  }
+
+  #adminHubScreen .tile-icon { font-size: 26px; }
+}
+
+@media (max-width: 420px) {
+  .admin-tile-grid,
+  .admin-submenu-grid {
+    width: 100%;
+    gap: 9px;
+  }
+
+  .admin-tile {
+    min-height: 105px;
+    font-size: 15px;
+  }
+}

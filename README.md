@@ -1,65 +1,73 @@
-# Purple Dragon Attendance PWA — Phase 3
+# Purple Dragon Attendance PWA — Phase 4
 
-This build adds the production-facing student experience on top of the proven
-Phase 2 offline sync architecture.
+Phase 4 brings the production admin/member workflow into the PWA and includes
+the two fixes identified during Phase 3 testing.
 
-## New in Phase 3
+## Phase 3 fixes carried forward
 
-- Purple Dragon crest on the student screens
-- **Forgot Your Number?** button and offline local-roster search
-- search result → normal name confirmation → attendance
-- **Trial Class Sign-In**
-- trial sign-ins are stored locally first and sync later
-- reliable reconnect sync:
-  - immediately on online event
-  - retry after 3, 10 and 30 seconds
-  - retry when app returns to foreground
-  - retry on focus
-  - one-minute safety check while open
-- Clear Attendance test control removed from the UI
-- Device / Sync Status retained
-- separate pending counts for attendance and trials
+- Keypad bottom row is now: **Clear | 0 | ⌫**
+- `⌫` removes only the last entered digit.
+- If a student or trial sign-in is created while another sync is already in
+  progress, the app remembers that another sync is required and immediately
+  runs a second pass when the current sync finishes.
+- The reconnect retry logic from the prior build remains:
+  - immediate
+  - 3 seconds
+  - 10 seconds
+  - 30 seconds
+  - foreground/focus retry
+  - one-minute safety retry
 
-## Important: keep your existing config.js
+## PWA Admin
 
-This ZIP deliberately contains **config.example.js**, not `config.js`.
+Tap the Purple Dragon crest on the main keypad to open Admin.
 
-Your GitHub repository already has a working `config.js` containing your Apps
-Script `/exec` URL. Leave that file alone when uploading Phase 3.
+The main Admin hub uses the six-tile layout:
 
-## Google Sheet changes
+1. Add Student
+2. Deactivate Student
+3. Today's Sign-ins
+4. Attendance Catch Up
+5. Reporting
+6. Admin
 
-### Log
-- A Timestamp
-- B Name
-- C PIN
-- D Attendance ID
+### Member management
 
-### Trials
-- A Timestamp
-- B Full Name
-- C Email
-- D Notes
-- E Trial ID
+- Add Student creates the next student number and sets Active = TRUE.
+- Deactivate Student sets Members column D to FALSE.
+- Reactivate Student sets it back to TRUE.
+- Member rows and historical attendance are never deleted.
 
-Existing rows remain valid.
+### Reporting
 
-## Deploy
+- Attendance Dashboard uses the existing server-side dashboard calculations.
+- CSV export uses the existing attendance CSV report.
 
-1. Replace your Apps Script Code.gs with the supplied Phase 3 Code.gs.
+### Admin settings
+
+- Open Google Sheet
+- Change Admin PIN
+- Refresh App Cache
+- Exit to Sign-In
+
+## Important deployment note
+
+Keep your existing configured `config.js` in GitHub. This package contains only
+`config.example.js` so it cannot accidentally overwrite your working Apps
+Script URL.
+
+## Deployment
+
+1. Replace Apps Script `Code.gs` with `Dojo_Code_PWA_Phase4.gs`.
 2. Save and update the existing Apps Script web-app deployment.
-3. Upload the Phase 3 PWA files to GitHub.
-4. Do **not** delete or replace the existing `config.js`.
-5. Commit.
-6. Wait for GitHub Pages to deploy.
-7. Open the PWA online, close it, then reopen once so service-worker v5 controls it.
-8. Open Device / Sync Status and press Sync Now once.
-9. Test:
-   - regular student sign-in
-   - Forgot Your Number?
-   - Trial Class Sign-In
-   - offline sign-in, then reconnect and watch it sync automatically.
+3. Upload the files from this PWA package to GitHub.
+4. Do NOT remove or replace your existing `config.js`.
+5. Commit and wait for GitHub Pages.
+6. Open the PWA online, close it, and reopen it once so service worker v6 takes control.
+7. Press Sync Now once.
+8. Test a normal online sign-in and confirm it syncs promptly.
+9. Test the ⌫ keypad button.
+10. Tap the crest and test the Admin PIN and member/admin screens.
 
-The crest is loaded from the same Purple Dragon URL used in the production
-Apps Script app and is cached by the service worker after the first successful
-online load, so it remains available offline afterward.
+Admin operations intentionally require an internet connection because they
+change or report on the authoritative Google Sheet data.

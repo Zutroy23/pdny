@@ -26,7 +26,7 @@
     </header>
 
     <section id="pinScreen" class="screen active compact-screen">
-      <img class="crest" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest">
+      <img id="adminEntryLogo" class="crest crest-clickable" src="https://purpledragonto.ca/wp-content/uploads/2026/01/official_crest_good_copy.png?w=1024&h=937" alt="Purple Dragon crest" title="Admin">
       <h1>Student Sign-In</h1>
       <div id="pinDisplay" class="pin-display">_ _ _</div>
 
@@ -42,7 +42,7 @@
         <button data-digit="9">9</button>
         <button id="clearBtn" class="secondary">Clear</button>
         <button data-digit="0">0</button>
-        <button class="secondary" disabled aria-hidden="true"></button>
+        <button id="backspaceBtn" class="secondary backspace-key" aria-label="Backspace">⌫</button>
       </div>
 
       <div id="pinMessage" class="message"></div>
@@ -135,10 +135,166 @@
       <div id="localMessage" class="message"></div>
       <div id="recentAttendance" class="recent-list"></div>
     </section>
+
+    <section id="adminLoginScreen" class="screen">
+      <h1>Admin</h1>
+      <div class="form-card admin-login-card">
+        <label for="adminPinInput">Admin PIN</label>
+        <input id="adminPinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN">
+        <div id="adminLoginMessage" class="message compact-message"></div>
+        <div class="actions">
+          <button id="adminLoginBackBtn" class="secondary">Back</button>
+          <button id="adminLoginBtn" class="primary">Enter</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminHubScreen" class="screen admin-screen">
+      <h1>Manage Members</h1>
+      <div class="admin-tile-grid">
+        <button class="admin-tile green" data-admin-nav="adminAddScreen"><span class="tile-icon">＋</span><span>Add Student</span></button>
+        <button class="admin-tile red" data-admin-nav="adminDeactivateScreen"><span class="tile-icon">−</span><span>Deactivate Student</span></button>
+        <button class="admin-tile teal" id="todaySigninsTile"><span class="tile-icon">✓</span><span>Today's Sign-ins</span></button>
+        <button class="admin-tile gold" data-admin-nav="adminCatchupScreen"><span class="tile-icon">↺</span><span>Attendance Catch Up</span></button>
+        <button class="admin-tile purple" data-admin-nav="adminReportingScreen"><span class="tile-icon">▥</span><span>Reporting</span></button>
+        <button class="admin-tile blue" data-admin-nav="adminSettingsScreen"><span class="tile-icon">⚙</span><span>Admin</span></button>
+      </div>
+      <button class="secondary admin-back-home">Exit to Sign-In</button>
+    </section>
+
+    <section id="adminAddScreen" class="screen admin-screen">
+      <h1>Add Student</h1>
+      <div class="form-card">
+        <label for="newStudentName">Student name</label>
+        <input id="newStudentName" type="text" autocomplete="off" placeholder="Full name">
+        <div id="addStudentMessage" class="message compact-message"></div>
+        <div class="actions">
+          <button class="secondary admin-hub-back">Back</button>
+          <button id="addStudentBtn" class="primary">Add Student</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminDeactivateScreen" class="screen admin-screen">
+      <h1>Deactivate Student</h1>
+      <div class="form-card">
+        <label for="deactivateSearch">Search active students</label>
+        <div class="inline-search">
+          <input id="deactivateSearch" type="text" autocomplete="off" placeholder="Name or number">
+          <button id="deactivateSearchBtn" class="primary">Find</button>
+        </div>
+        <div id="deactivateMessage" class="message compact-message"></div>
+        <div id="deactivateResults" class="search-results"></div>
+        <button id="openReactivateBtn" class="secondary">Reactivate a Student</button>
+      </div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminReactivateScreen" class="screen admin-screen">
+      <h1>Reactivate Student</h1>
+      <div class="form-card">
+        <label for="reactivateSearch">Search inactive students</label>
+        <div class="inline-search">
+          <input id="reactivateSearch" type="text" autocomplete="off" placeholder="Name or number">
+          <button id="reactivateSearchBtn" class="primary">Find</button>
+        </div>
+        <div id="reactivateMessage" class="message compact-message"></div>
+        <div id="reactivateResults" class="search-results"></div>
+      </div>
+      <button id="reactivateBackBtn" class="secondary">Back</button>
+    </section>
+
+    <section id="adminTodayScreen" class="screen admin-screen">
+      <h1>Today's Sign-ins</h1>
+      <div id="todaySigninsMessage" class="message compact-message"></div>
+      <div id="todaySigninsList" class="admin-list"></div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminCatchupScreen" class="screen admin-screen">
+      <h1>Attendance Catch Up</h1>
+      <div class="form-card">
+        <label for="catchupDate">Class date</label>
+        <input id="catchupDate" type="date">
+        <button id="loadCatchupBtn" class="primary">Load Missing Students</button>
+        <div id="catchupMessage" class="message compact-message"></div>
+        <div id="catchupResults" class="check-list"></div>
+        <button id="submitCatchupBtn" class="primary" style="display:none;">Mark Selected Attended</button>
+      </div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminReportingScreen" class="screen admin-screen">
+      <h1>Reporting</h1>
+      <div class="admin-submenu-grid">
+        <button id="openDashboardBtn" class="admin-tile purple"><span class="tile-icon">▥</span><span>Attendance Dashboard</span></button>
+        <button id="openCsvBtn" class="admin-tile teal"><span class="tile-icon">⇩</span><span>Export Attendance CSV</span></button>
+      </div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminDashboardScreen" class="screen admin-screen">
+      <h1>Attendance Dashboard</h1>
+      <div class="form-card report-controls">
+        <div class="date-pair">
+          <div><label for="dashboardStart">Start</label><input id="dashboardStart" type="date"></div>
+          <div><label for="dashboardEnd">End</label><input id="dashboardEnd" type="date"></div>
+        </div>
+        <button id="loadDashboardBtn" class="primary">Show Report</button>
+        <div id="dashboardMessage" class="message compact-message"></div>
+      </div>
+      <div id="dashboardSummary" class="metric-grid"></div>
+      <div id="dashboardTable" class="admin-list"></div>
+      <button id="dashboardBackBtn" class="secondary">Back</button>
+    </section>
+
+    <section id="adminCsvScreen" class="screen admin-screen">
+      <h1>Export Attendance CSV</h1>
+      <div class="form-card">
+        <div class="date-pair">
+          <div><label for="csvStart">Start</label><input id="csvStart" type="date"></div>
+          <div><label for="csvEnd">End</label><input id="csvEnd" type="date"></div>
+        </div>
+        <div id="csvMessage" class="message compact-message"></div>
+        <div class="actions">
+          <button id="csvBackBtn" class="secondary">Back</button>
+          <button id="downloadCsvBtn" class="primary">Download CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminSettingsScreen" class="screen admin-screen">
+      <h1>Admin</h1>
+      <div class="admin-submenu-grid">
+        <button id="openSheetBtn" class="admin-tile teal"><span class="tile-icon">▦</span><span>Open Google Sheet</span></button>
+        <button id="changePinNavBtn" class="admin-tile blue"><span class="tile-icon">⌨</span><span>Change Admin PIN</span></button>
+        <button id="refreshCacheBtn" class="admin-tile purple"><span class="tile-icon">⚡</span><span>Refresh App Cache</span></button>
+        <button class="admin-tile red admin-back-home"><span class="tile-icon">↪</span><span>Exit to Sign-In</span></button>
+      </div>
+      <div id="adminSettingsMessage" class="message compact-message"></div>
+      <button class="secondary admin-hub-back">Back</button>
+    </section>
+
+    <section id="adminChangePinScreen" class="screen admin-screen">
+      <h1>Change Admin PIN</h1>
+      <div class="form-card">
+        <label for="newAdminPin">New PIN</label>
+        <input id="newAdminPin" type="password" inputmode="numeric" autocomplete="off">
+        <label for="confirmAdminPin">Confirm new PIN</label>
+        <input id="confirmAdminPin" type="password" inputmode="numeric" autocomplete="off">
+        <div id="changePinMessage" class="message compact-message"></div>
+        <div class="actions">
+          <button id="changePinBackBtn" class="secondary">Back</button>
+          <button id="changePinBtn" class="primary">Update PIN</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <script src="./config.js"></script>
   <script src="./db.js"></script>
   <script src="./app.js"></script>
+  <script src="./admin.js"></script>
 </body>
 </html>

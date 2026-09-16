@@ -3,6 +3,7 @@
   let selectedStudent = null;
   let resetTimer = null;
   let syncInProgress = false;
+  let syncRequested = false;
   const reconnectTimers = [];
 
   const $ = id => document.getElementById(id);
@@ -428,7 +429,10 @@
   async function syncNow(options = {}) {
     const quiet = Boolean(options.quiet);
 
-    if (syncInProgress) return;
+    if (syncInProgress) {
+      syncRequested = true;
+      return;
+    }
 
     if (!navigator.onLine) {
       if (!quiet && $('localMessage')) {
@@ -486,6 +490,13 @@
       }
 
       await refreshStatus();
+
+      if (syncRequested && navigator.onLine) {
+        syncRequested = false;
+        setTimeout(() => {
+          syncNow({ quiet: true }).catch(console.error);
+        }, 0);
+      }
     }
   }
 
@@ -529,6 +540,12 @@
 
   $('clearBtn').addEventListener('click', () => {
     pin = '';
+    renderPin();
+    $('pinMessage').textContent = '';
+  });
+
+  $('backspaceBtn').addEventListener('click', () => {
+    pin = pin.slice(0, -1);
     renderPin();
     $('pinMessage').textContent = '';
   });
