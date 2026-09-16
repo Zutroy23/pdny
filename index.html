@@ -10,13 +10,13 @@
   <title>Purple Dragon Attendance</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=6.1">
 </head>
 <body>
   <main class="app-shell">
     <header class="statusbar">
       <div>
-        <strong>Purple Dragon Attendance</strong>
+        <strong>Purple Dragon Attendance <span class="header-version">v6.1</span></strong>
         <div class="subtle">Offline-ready attendance</div>
       </div>
       <div class="status-right">
@@ -381,9 +381,12 @@
 
   </main>
 
+  <div class="app-version" id="appVersion">App v6.1</div>
+
   <script src="./config.js"></script>
-  <script src="./db.js"></script>
-  <script src="./app.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./version.js?v=6.1"></script>
+  <script src="./db.js?v=6.1"></script>
+  <script src="./app.js?v=6.1"></script>
+  <script src="./admin.js?v=6.1"></script>
 </body>
 </html>

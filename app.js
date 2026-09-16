@@ -640,7 +640,24 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        await navigator.serviceWorker.register('./service-worker.js');
+        const registration = await navigator.serviceWorker.register(
+          './service-worker.js',
+          { updateViaCache: 'none' }
+        );
+
+        // Ask the browser to check the service worker on every online launch.
+        if (navigator.onLine) {
+          registration.update().catch(console.error);
+        }
+
+        // When a newly-installed worker takes control, reload once so the
+        // visible HTML/JS immediately matches the new cache/version.
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          const key = 'pd-sw-controller-reload';
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+        });
       } catch (err) {
         console.error('Service worker registration failed', err);
       }

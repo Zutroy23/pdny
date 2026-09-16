@@ -1,8 +1,8 @@
-# Purple Dragon Attendance PWA — Phase 6
+# Purple Dragon Attendance PWA — Phase 6.1
 
-Phase 6 adds belt/rank tracking, student management, bulk post-exam promotions, and belt images while preserving the existing offline-first attendance workflow.
+Phase 6.1 adds belt/rank tracking, student management, bulk post-exam promotions, and belt images while preserving the existing offline-first attendance workflow.
 
-## New in Phase 6
+## New in Phase 6.1
 
 - New students default to **Unofficial White Belt** and **Elite = false**.
 - Active-roster sync now includes rank, Elite status, belt image, base days, and standard next exam rank.
@@ -63,7 +63,7 @@ Do not create a different endpoint unless you intentionally want the PWA URL con
 
 ### 2. GitHub Pages PWA
 
-Upload/replace the Phase 6 PWA files in the `pdny` repository.
+Upload/replace the Phase 6.1 PWA files in the `pdny` repository.
 
 **Keep your existing `config.js`.** This package intentionally contains only `config.example.js`; do not delete or overwrite your configured `config.js`.
 
@@ -95,3 +95,16 @@ Use **Device / Sync Status → Sync Now** once after deployment to confirm the n
 ## Belt model
 
 The progression uses 79 base rank states plus 10 Elite visual variants, producing 89 distinct belt images. Elite is stored separately as a boolean, while the belt image resolver uses both Rank ID and Elite status.
+
+
+## Phase 6.1 update/version behavior
+
+- The running build is visibly labelled **App v6.1** in the bottom-right corner and **v6.1** in the header.
+- Core CSS/JS files use `?v=6.1` URLs so an older service worker cannot silently serve the previous build after deployment.
+- Online navigation is network-first; offline navigation falls back to the cached app shell.
+- Service worker registration uses `updateViaCache: none`, explicitly checks for updates on online launch, and reloads once when a new worker takes control.
+- Keep your existing `config.js`; this package still contains only `config.example.js`.
+
+### If the installed PWA is currently stuck on an older build
+
+After uploading/committing all Phase 6.1 files, open the GitHub Pages URL in a normal browser tab once with `?force=6.1` appended. The old cache should miss that navigation URL; the Phase 6.1 HTML then requests versioned CSS/JS assets. Once you see **App v6.1**, close and reopen the installed PWA.

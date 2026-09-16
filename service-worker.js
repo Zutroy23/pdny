@@ -1,13 +1,15 @@
-const CACHE_NAME = 'purple-dragon-pwa-v8';
+importScripts('./version.js?v=6.1');
+const CACHE_NAME = `purple-dragon-pwa-v${self.PD_APP_VERSION}`;
 
 const APP_SHELL = [
   './',
-  './index.html',
-  './styles.css',
+  './index.html?v=6.1',
+  './styles.css?v=6.1',
   './config.js',
-  './db.js',
-  './app.js',
-  './admin.js',
+  './version.js?v=6.1',
+  './db.js?v=6.1',
+  './app.js?v=6.1',
+  './admin.js?v=6.1',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -151,6 +153,32 @@ self.addEventListener('fetch', event => {
   // Never intercept Apps Script or other cross-origin API requests.
   if (url.origin !== self.location.origin) return;
 
+  // HTML navigation and config are network-first when online. This prevents
+  // an old cached index from hiding a newly deployed build. Offline falls
+  // back to the cached shell.
+  const isNavigation = request.mode === 'navigate';
+  const isConfig = url.pathname.endsWith('/config.js');
+
+  if (isNavigation || isConfig) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const exact = await caches.match(request);
+          if (exact) return exact;
+          return caches.match('./index.html?v=6.1');
+        })
+    );
+    return;
+  }
+
+  // Versioned static assets remain cache-first for fast/offline operation.
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
