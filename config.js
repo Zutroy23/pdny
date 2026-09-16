@@ -5,6 +5,6 @@
 // const PD_CONFIG = {
 //   API_URL: 'https://script.google.com/macros/s/DEPLOYMENT_ID/exec'
 // };
-const PD_CONFIG = {
+window.PD_CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbwZWrNlYXTDzohDAFlS3uF-IWlEFKVRKb4C4s4l5yRlO-c1HQIbKA1V91oeuSYLjwGW/exec'
 };
