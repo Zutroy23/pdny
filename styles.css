@@ -464,11 +464,6 @@ button.large {
 }
 
 @media (max-height: 800px) {
-  #adminHubScreen .admin-tile-grid {
-    width: min(92vw, 455px);
-    gap: 9px;
-  }
-
   #adminHubScreen .admin-tile {
     min-height: 0;
     border-radius: 14px;
@@ -515,38 +510,6 @@ body.admin-mode .app-shell {
 .admin-screen .dashboard-shortcuts,
 .admin-screen .selected-filter {
   width: min(88vw, 560px);
-}
-
-#adminHubScreen {
-  padding-top: 6px;
-  gap: 8px;
-}
-
-#adminHubScreen h1 {
-  margin: 3px 0 7px;
-}
-
-#adminHubScreen .admin-tile-grid {
-  width: min(86vw, 450px);
-  gap: 8px;
-}
-
-#adminHubScreen .admin-tile {
-  aspect-ratio: 1.08 / 1;
-  min-height: 0;
-  padding: 8px;
-  gap: 5px;
-  font-size: 15px;
-}
-
-#adminHubScreen .tile-icon {
-  font-size: 25px;
-}
-
-#adminHubScreen .admin-back-home {
-  margin-top: 1px;
-  padding-top: 9px;
-  padding-bottom: 9px;
 }
 
 .today-entry-actions {
@@ -842,10 +805,6 @@ body.admin-mode .app-shell {
 
 
 /* v0.63 information architecture + belt setup */
-#adminHubScreen .main-admin-grid {
-  max-width: 520px;
-}
-
 #adminBeltManagementScreen .admin-submenu-grid {
   max-width: 520px;
 }
@@ -1040,10 +999,6 @@ h1,
 .initialization-controls,
 .initialization-list {
   width: min(100%, 620px);
-}
-
-#adminHubScreen .admin-tile-grid {
-  width: min(100%, 450px);
 }
 
 .inline-search,
@@ -1379,4 +1334,11 @@ h1,
     display: block;
     margin: 8px auto 0;
   }
+}
+
+
+/* v0.73: Dojo Administration uses the same content width/spacing as other admin screens. */
+#adminHubScreen .main-admin-grid {
+  width: min(100%, 620px);
+  max-width: 620px;
 }
