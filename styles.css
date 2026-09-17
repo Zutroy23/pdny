@@ -355,7 +355,7 @@ button.large {
 
 .admin-tile-grid,
 .admin-submenu-grid {
-  width: min(94vw, 620px);
+  width: min(100%, 620px);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 11px;
