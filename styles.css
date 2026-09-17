@@ -355,7 +355,7 @@ button.large {
 
 .admin-tile-grid,
 .admin-submenu-grid {
-  width: min(94vw, 520px);
+  width: min(94vw, 620px);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 11px;
@@ -806,7 +806,7 @@ body.admin-mode .app-shell {
 
 /* v0.63 information architecture + belt setup */
 #adminBeltManagementScreen .admin-submenu-grid {
-  max-width: 520px;
+  max-width: 620px;
 }
 
 .initialization-controls,
